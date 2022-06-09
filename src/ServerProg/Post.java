@@ -1,16 +1,17 @@
 package ServerProg;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 public class Post {
     private final int id;
-    private String creator;
-    private String title;
-    private String text;
+    private final String creator;
+    private final String title;
+    private final String text;
 
-    private ConcurrentHashMap<String, Integer> votes = new ConcurrentHashMap<String, Integer>();
+    private HashMap<String, Integer> votes = new HashMap<String, Integer>();
     int upVotes = 0;
     int downVotes = 0;
+
     private ConcurrentArrayList<Comment> comments = new ConcurrentArrayList<Comment>();
 
     public Post(int id, String creator, String title, String text){
@@ -28,11 +29,6 @@ public class Post {
         this.title = title;
         this.text = text;
     }
-    public void deletePost(){
-        title = null;
-        text = null;
-        creator = null;
-    }
 
     public int getId() {
         return id;
@@ -46,14 +42,14 @@ public class Post {
     public String getText() {
         return text;
     }
-    public int getUpVotes() {
+    public synchronized int getUpVotes() {
         return upVotes;
     }
-    public int getDownVotes() {
+    public synchronized int getDownVotes() {
         return downVotes;
     }
 
-    public boolean vote(String username, int vote){
+    public synchronized boolean vote(String username, int vote){
         if(vote < 0){
             vote = -1;
         } else{
@@ -70,7 +66,6 @@ public class Post {
             return false;
         }
     }
-
     public void addComment(Comment comment){
         if(comment == null){
             throw new NullPointerException("null comment");
