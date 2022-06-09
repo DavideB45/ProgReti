@@ -2,3 +2,5 @@
 /out/
 *.xml
 *.xml
+.idea/runConfigurations.xml
+.idea/misc.xml

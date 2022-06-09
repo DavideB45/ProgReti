@@ -8,11 +8,11 @@ public class Post {
     private final String title;
     private final String text;
 
-    private HashMap<String, Integer> votes = new HashMap<String, Integer>();
-    int upVotes = 0;
-    int downVotes = 0;
+    private final HashMap<String, Integer> votes = new HashMap<>();
+    private int upVotes = 0;
+    private int downVotes = 0;
 
-    private ConcurrentArrayList<Comment> comments = new ConcurrentArrayList<Comment>();
+    private final ConcurrentArrayList<Comment> comments = new ConcurrentArrayList<>();
 
     public Post(int id, String creator, String title, String text){
         if(creator == null || title == null || text == null){
@@ -42,13 +42,13 @@ public class Post {
     public String getText() {
         return text;
     }
+
     public synchronized int getUpVotes() {
         return upVotes;
     }
     public synchronized int getDownVotes() {
         return downVotes;
     }
-
     public synchronized boolean vote(String username, int vote){
         if(vote < 0){
             vote = -1;
@@ -66,6 +66,7 @@ public class Post {
             return false;
         }
     }
+
     public void addComment(Comment comment){
         if(comment == null){
             throw new NullPointerException("null comment");
