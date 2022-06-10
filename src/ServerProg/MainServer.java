@@ -68,10 +68,10 @@ public class MainServer {
             LocateRegistry.createRegistry(port);
             Registry registry = LocateRegistry.getRegistry(port);
             registry.rebind("WINSOME", stub);
-            System.out.println("Server ready");
+            return true;
         } catch (RemoteException e) {
             e.printStackTrace();
-            return;
+            return false;
         }
     }
 }
