@@ -1,27 +1,52 @@
 package ServerProg;
 
 
-import java.util.ArrayList;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class MainServer {
-    public static void main(String[] args){
-        System.out.println("hello world");
+    public static void main(String[] args) {
+        SocialNetwork sn = new SocialNetwork();
+        ServerSocket serverSocket = null;
+        Socket socket = null;
+        try {
+            serverSocket = new ServerSocket(8080);
+            System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        while (true) {
+            try {
+                socket = serverSocket.accept();
+                System.out.println("Connected to " + socket.getInetAddress().getHostAddress());
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
+            }
 
-        ConcurrentArrayList<Post> posts = new ConcurrentArrayList<>();
-        posts.add(new Post(0, "admin", "titolo", "testo"));
+            handleRequest(socket);
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-        System.out.println(posts.get(0).getTitle());
-        System.out.println(posts.get(0).getText());
-        System.out.println(posts.get(0).getCreator());
-        System.out.println(posts.get(0).getUpVotes());
-        System.out.println();
-
-        ArrayList<Post> posts2 = posts.getListCopy();
-        posts2.get(0).vote("admin", 1);
-        posts2.get(0).vote("admin2", 1);
-        posts2.get(0).vote("admin3", 1);
-        System.out.println("in copy : " + posts2.get(0).getUpVotes());
-        System.out.println("in orig : " + posts.get(0).getUpVotes());
-
+    private static boolean handleRequest(Socket socket) {
+        try (OutputStream oStr = socket.getOutputStream();
+             BufferedReader iStr = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+            String request = iStr.readLine();
+            System.out.println("Req  : " + request);
+            oStr.write("Ciao coso\n".getBytes(StandardCharsets.UTF_8), 0, "Ciao coso\n".getBytes(StandardCharsets.UTF_8).length);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }
