@@ -1,16 +1,23 @@
 package ServerProg;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SocialNetwork {
+public class SocialNetwork implements Enrollment {
     private final ConcurrentHashMap<String, Utente> utenti = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, Post> posts = new ConcurrentHashMap<>();
 
-    public SocialNetwork(){
+    public SocialNetwork() throws RemoteException {
     }
 
-    public Utente register(String username, String password, ArrayList<String> tags){
+    public String randomMethod() throws RemoteException {
+        float random = (float) Math.random();
+        System.out.println("random: " + random);
+        return "random" + random;
+    }
+
+    public boolean register(String username, String password, ArrayList<String> tags) throws RemoteException {
         if(username == null || password == null || tags == null){
             throw new NullPointerException("campo mancante");
         }
@@ -18,7 +25,7 @@ public class SocialNetwork {
         if(utenti.putIfAbsent(username, u) != null){
             throw new IllegalArgumentException("username già in uso");
         } else{
-            return u;
+            return true;
         }
     }
 

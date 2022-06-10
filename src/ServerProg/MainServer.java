@@ -6,12 +6,24 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
 public class MainServer {
     public static void main(String[] args) {
-        SocialNetwork sn = new SocialNetwork();
-        ServerSocket serverSocket = null;
-        Socket socket = null;
+        SocialNetwork sn;
+        try {
+            sn = new SocialNetwork();
+            activateRMI(8081, sn);
+            System.out.println("Server ready");
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return;
+        }
+        ServerSocket serverSocket;
+        Socket socket;
         try {
             serverSocket = new ServerSocket(8080);
             System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
@@ -47,6 +59,19 @@ public class MainServer {
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private static boolean activateRMI(int port, SocialNetwork sn) {
+        try {
+            Enrollment stub = (Enrollment) UnicastRemoteObject.exportObject(sn, 0);
+            LocateRegistry.createRegistry(port);
+            Registry registry = LocateRegistry.getRegistry(port);
+            registry.rebind("WINSOME", stub);
+            System.out.println("Server ready");
+        } catch (RemoteException e) {
+            e.printStackTrace();
+            return;
         }
     }
 }
