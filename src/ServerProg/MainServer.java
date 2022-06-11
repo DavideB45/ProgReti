@@ -2,9 +2,7 @@ package ServerProg;
 
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -14,52 +12,90 @@ import java.rmi.server.UnicastRemoteObject;
 public class MainServer {
     public static void main(String[] args) {
         SocialNetwork sn;
+        ServerSocket serverSocket;
+        ConnectedUser[] users = new ConnectedUser[4];
         try {
             sn = new SocialNetwork();
-            activateRMI(8081, sn);
-            System.out.println("Server ready");
+            if (activateRMI(8081, sn)) {
+                System.out.println("RMI activated");
+            } else {
+                System.out.println("RMI not activated");
+                return;
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
             return;
         }
-        ServerSocket serverSocket;
-        Socket socket;
         try {
             serverSocket = new ServerSocket(8080);
             System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
+            System.out.println("Server ready");
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
+
+        try {
+            serverSocket.setSoTimeout(10);
+            System.out.println(serverSocket.getSoTimeout());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        int connectedClient = 0;
+        Socket socket;
         while (true) {
             try {
                 socket = serverSocket.accept();
-                System.out.println("Connected to " + socket.getInetAddress().getHostAddress());
+                connectedClient++;
+                if (connectedClient >= users.length) {
+                    errorFull(socket);
+                    connectedClient--;
+                } else {
+                    users[connectedClient -1] = new ConnectedUser(socket, String.valueOf(connectedClient));
+                    System.out.println("coso connesso\n");
+                }
+            } catch (SocketTimeoutException e){
+                //System.out.println(connectedClient);
             } catch (IOException e) {
                 e.printStackTrace();
-                continue;
+                try {
+                    serverSocket.close();
+                } catch (IOException ex) {
+                    return;
+                }
+                return;
             }
+            for (int i = 0; i < connectedClient; i++) {
 
-            handleRequest(socket);
-            try {
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                if( !handleUser(users[i]) ){
+                    for (int j = i; j < connectedClient; j++){
+                        users[j] = users[j + 1];
+                    }
+                    connectedClient--;
+                    break;
+                }
+
             }
         }
     }
 
-    private static boolean handleRequest(Socket socket) {
-        try (OutputStream oStr = socket.getOutputStream();
-             BufferedReader iStr = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String request = iStr.readLine();
-            System.out.println("Req  : " + request);
-            oStr.write("Ciao coso\n".getBytes(StandardCharsets.UTF_8), 0, "Ciao coso\n".getBytes(StandardCharsets.UTF_8).length);
-            return true;
+    private static void errorFull(Socket socket){
+        try (OutputStream oStr = socket.getOutputStream()) {
+            byte[] errorMessage = "Ciao coso, siamo pieni\n".getBytes(StandardCharsets.UTF_8);
+            oStr.write(errorMessage, 0, errorMessage.length);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static boolean handleUser(ConnectedUser u){
+        if (!u.isConnected()){
             return false;
         }
+        if(!u.hasRequest()){
+            return true;
+        }
+        return u.handleRequest();
     }
 
     private static boolean activateRMI(int port, SocialNetwork sn) {
