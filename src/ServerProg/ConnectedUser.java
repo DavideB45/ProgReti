@@ -6,45 +6,64 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class ConnectedUser {
-    private String name;
+    private Utente identity;
     private OutputStream fileOut;
     private BufferedReader fileIn;
     private Socket fileSocket;
+    private long lastConnection;
 
 
-    public ConnectedUser(Socket uSocket, String name) throws IOException {
+    public ConnectedUser(Socket uSocket) throws IOException {
             fileOut = uSocket.getOutputStream();
             fileIn = new BufferedReader(new InputStreamReader(uSocket.getInputStream()));
             fileSocket = uSocket;
-            this.name = name;
+            lastConnection = System.currentTimeMillis();
     }
 
-    public boolean handleRequest(){
+    public boolean hasRequest(){
         try {
-            System.out.print("Req  : ");
-            String request = fileIn.readLine();
-            System.out.println(request);
-            byte[] ciaoRisposta = ("Ciao " + name + "\n").getBytes(StandardCharsets.UTF_8);
-            fileOut.write(ciaoRisposta, 0, ciaoRisposta.length);
-            return true;
-        } catch (Exception e){
+            if(fileIn.ready()){
+                lastConnection = System.currentTimeMillis();
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    public boolean hasRequest(){
-        try {
-            return this.isConnected() && fileIn.ready();
-        } catch (IOException e) {
-            return false;
+    public int getOpCode() throws IOException {
+        char[] status = new char[2];
+        fileIn.read(status, 0, 2);
+        try{
+            return Integer.parseInt(new String(status), 10);
+        }catch (NumberFormatException e){
+            return -1;
         }
     }
 
+    public String[] getArguments() throws IOException {
+        return fileIn.readLine().split(":");
+    }
+
+    public void answer(String ret) throws IOException {
+        fileOut.write(ret.getBytes(StandardCharsets.UTF_8), 0, ret.getBytes(StandardCharsets.UTF_8).length);
+    }
+
+    public void setIdentity(Utente user){
+        this.identity = user;
+    }
+    public Utente getIdentity(){
+        return this.identity;
+    }
+
     public boolean isConnected(){
-        return !fileSocket.isInputShutdown() && !fileSocket.isOutputShutdown();
+        return lastConnection + 1000*120 > System.currentTimeMillis();
     }
 
 }

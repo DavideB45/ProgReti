@@ -22,8 +22,9 @@ public class SocialNetwork implements Enrollment {
             throw new NullPointerException("campo mancante");
         }
         Utente u = new Utente(username, password, tags);
+        System.out.println("Registrazione utente : " + username + "\npassword: " + password);
         if(utenti.putIfAbsent(username, u) != null){
-            throw new IllegalArgumentException("username già in uso");
+            return false;
         } else{
             return true;
         }
@@ -33,16 +34,21 @@ public class SocialNetwork implements Enrollment {
         if(username == null || password == null){
             throw new NullPointerException("campo mancante");
         }
+        System.out.println("Login utente : " + username + "\npassword: " + password);
         if(!utenti.containsKey(username) || !utenti.get(username).checkPassword(password)){
             return null;
         }
         return utenti.get(username);
     }
 
-    public boolean logout(String username, Utente user){
-        if(username == null){
+    public int logout(Utente user) {
+        if (user == null) {
             throw new NullPointerException("campo mancante");
         }
-        return utenti.containsKey(username);
+        if (utenti.containsKey(user.getUsername())) {
+            return 200;
+        } else {
+            return 500;
+        }
     }
 }

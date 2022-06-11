@@ -16,31 +16,20 @@ public class MainServer {
         ConnectedUser[] users = new ConnectedUser[4];
         try {
             sn = new SocialNetwork();
-            if (activateRMI(8081, sn)) {
-                System.out.println("RMI activated");
-            } else {
-                System.out.println("RMI not activated");
+            serverSocket = new ServerSocket(8080);
+            serverSocket.setSoTimeout(10);
+            System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
+            System.out.println("Server ready");
+            if (!activateRMI(8081, sn))
                 return;
-            }
         } catch (RemoteException e) {
             e.printStackTrace();
             return;
-        }
-        try {
-            serverSocket = new ServerSocket(8080);
-            System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
-            System.out.println("Server ready");
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
-        try {
-            serverSocket.setSoTimeout(10);
-            System.out.println(serverSocket.getSoTimeout());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         int connectedClient = 0;
         Socket socket;
         while (true) {
@@ -51,7 +40,7 @@ public class MainServer {
                     errorFull(socket);
                     connectedClient--;
                 } else {
-                    users[connectedClient -1] = new ConnectedUser(socket, String.valueOf(connectedClient));
+                    users[connectedClient -1] = new ConnectedUser(socket);
                     System.out.println("coso connesso\n");
                 }
             } catch (SocketTimeoutException e){
@@ -67,7 +56,7 @@ public class MainServer {
             }
             for (int i = 0; i < connectedClient; i++) {
 
-                if( !handleUser(users[i]) ){
+                if( !handleUser(users[i], sn) ){
                     for (int j = i; j < connectedClient; j++){
                         users[j] = users[j + 1];
                     }
@@ -88,14 +77,43 @@ public class MainServer {
         }
     }
 
-    private static boolean handleUser(ConnectedUser u){
+    private static boolean handleUser(ConnectedUser u, SocialNetwork sn){
         if (!u.isConnected()){
             return false;
         }
         if(!u.hasRequest()){
             return true;
         }
-        return u.handleRequest();
+        try {
+            int operation = u.getOpCode();
+            String[] args = u.getArguments();
+            switch (operation){
+                case 2:
+                    Utente verifiedUser = sn.login(args[1], args[2]);
+                    u.setIdentity(verifiedUser);
+                    if (verifiedUser == null) {
+                        System.out.println("not verified");
+                        u.answer("404");
+                    } else {
+                        System.out.println("logged");
+                        u.answer("200");
+                    }
+                    break;
+                case 3:
+                    u.answer(String.valueOf(sn.logout(u.getIdentity())));
+                    break;
+                default:
+                    System.out.println("richiesta strana : " + operation);
+                    for (String arg: args) {
+                        System.out.println(arg);
+                    }
+                    u.answer("418");
+                    break;
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
     }
 
     private static boolean activateRMI(int port, SocialNetwork sn) {
@@ -104,9 +122,11 @@ public class MainServer {
             LocateRegistry.createRegistry(port);
             Registry registry = LocateRegistry.getRegistry(port);
             registry.rebind("WINSOME", stub);
+            System.out.println("RMI activated");
             return true;
         } catch (RemoteException e) {
             e.printStackTrace();
+            System.out.println("RMI not activated");
             return false;
         }
     }
