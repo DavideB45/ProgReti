@@ -57,6 +57,7 @@ public class MainServer {
             for (int i = 0; i < connectedClient; i++) {
 
                 if( !handleUser(users[i], sn) ){
+                    System.out.println(users[i].getIdentity().getUsername() +" disconnesso");
                     for (int j = i; j < connectedClient; j++){
                         users[j] = users[j + 1];
                     }
@@ -87,6 +88,7 @@ public class MainServer {
         try {
             int operation = u.getOpCode();
             String[] args = u.getArguments();
+            Utente user = u.getIdentity();
             switch (operation){
                 case 2:
                     Utente verifiedUser = sn.login(args[1], args[2]);
@@ -100,7 +102,22 @@ public class MainServer {
                     }
                     break;
                 case 3:
-                    u.answer(String.valueOf(sn.logout(u.getIdentity())));
+                    u.answer(String.valueOf(sn.logout(user)));
+                    u.setIdentity(null);
+                    break;
+                case 7:
+                    if(user == null){
+                        u.answer("401");
+                    } else {
+                        u.answer(String.valueOf(sn.follow(user, args[1])));
+                    }
+                    break;
+                case 8:
+                    if(user == null){
+                        u.answer("401");
+                    } else {
+                        u.answer(String.valueOf(sn.unfollow(user, args[1])));
+                    }
                     break;
                 default:
                     System.out.println("richiesta strana : " + operation);

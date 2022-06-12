@@ -62,7 +62,7 @@ public class ConnectedUser {
     }
 
     public boolean isConnected(){
-        return lastConnection + 1000*120 > System.currentTimeMillis();
+        return lastConnection + 1000*240 > System.currentTimeMillis();
     }
 
 }

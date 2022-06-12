@@ -62,7 +62,7 @@ public class ServerConnection {
             return "Not logged in";
         }
         try {
-            System.out.println(stubSN.registerCallback(callback, username, password));
+            stubSN.registerCallback(callback, username, password);
             return "notifiche attive";
         } catch (RemoteException e) {
             return "notifiche non attive";
@@ -74,7 +74,7 @@ public class ServerConnection {
             return "Not logged in";
         }
         try {
-            System.out.println(stubSN.unregisterCallback(callback, username, password));
+            stubSN.unregisterCallback(callback, username, password);
             return "notifiche disattive";
         } catch (RemoteException | NullPointerException e) {
             return "notifiche non disattivate";
@@ -125,6 +125,37 @@ public class ServerConnection {
         }
     }
 
+    public String follow(String username) throws IOException {
+        if(!logged){
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"07", username, "\n"});
+        oStr.write(message, 0, message.length);
+        char[] status = new char[3];
+        iStr.read(status, 0, 3);
+        int code = Integer.decode(new String(status));
+        if(code == 200){
+            return "following " + username;
+        } else {
+            return new String(status) + ": unable to follow";
+        }
+    }
+
+    public String unfollow(String username) throws IOException {
+        if(!logged){
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"08", username, "\n"});
+        oStr.write(message, 0, message.length);
+        char[] status = new char[3];
+        iStr.read(status, 0, 3);
+        int code = Integer.decode(new String(status));
+        if(code == 200){
+            return "unfollowing " + username;
+        } else {
+            return new String(status) + ": unable to unfollow";
+        }
+    }
     private byte[] writeRequest(String[] words){
         return String.join(":", words).getBytes(StandardCharsets.UTF_8);
     }

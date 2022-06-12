@@ -17,7 +17,7 @@ public class MainClient {
 
         String request;
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String answer = "";
+        String answer;
         while (true) {
             try {
                 request = stdIn.readLine();
@@ -32,13 +32,21 @@ public class MainClient {
                     case "logout":
                         answer = serverConn.logout(splitReq[1]);
                         break;
+                    case "follow":
+                        answer = serverConn.follow(splitReq[1]);
+                        break;
+                    case "unfollow":
+                        answer = serverConn.unfollow(splitReq[1]);
+                        break;
                     default:
-                        System.out.println("operazione non riconosciuta");
+                        answer = "operazione non riconosciuta";
                         break;
                 }
                 System.out.println(answer);
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (ArrayIndexOutOfBoundsException e){
+                System.out.println("non hai inserito tutti i parametri");
             }
         }
     }

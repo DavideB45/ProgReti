@@ -18,11 +18,13 @@ public class FollowerList implements FollowerCallback {
     @Override
     public synchronized void newFollower(String username) throws RemoteException {
         this.followers.add(username);
+        System.out.println("new follower: " + username);
     }
 
     @Override
     public synchronized void newUnfollow(String username) throws RemoteException {
         this.followers.remove(username);
+        System.out.println("lost follower: " + username);
     }
 
     public synchronized ArrayList<String> getFollowersCopy(){

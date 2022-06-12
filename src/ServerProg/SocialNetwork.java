@@ -93,4 +93,31 @@ public class SocialNetwork implements Enrollment {
             return 500;
         }
     }
+
+    public int follow(Utente user, String username) {
+        if (user == null || username == null) {
+            return 400;
+        }
+        Utente followed = utenti.get(username);
+        if (followed == null) {
+            return 404;
+        }
+        if (user.follow(followed)) {
+            return 200;
+        } else {
+            return 500;
+        }
+    }
+
+    public int unfollow(Utente user, String username) {
+        if (user == null || username == null) {
+            return 400;
+        }
+        Utente followed = utenti.get(username);
+        if (followed == null) {
+            return 404;
+        }
+        user.unfollow(followed);
+        return 200;
+    }
 }

@@ -79,6 +79,7 @@ public class Utente {
                     callback.newUnfollow(name);
                 }
             } catch (RemoteException e){
+                e.printStackTrace();
                 followersCallbacks.remove(callback);
             }
         }
@@ -90,18 +91,16 @@ public class Utente {
         if(username.equals(this.username)){
             return false;
         }
-        if(following.addIfAbsent(username)){
+        if(followers.addIfAbsent(username)){
             notifyAll(username, true);
-            return true;
-        } else {
-            return false;
         }
+        return true;
     }
     public void removeFollower(String username) throws NullPointerException{
         if(username == null){
             throw new NullPointerException("username mancante");
         }
-        if(following.remove(username)){
+        if(followers.remove(username)){
             notifyAll(username, false);
         }
     }
