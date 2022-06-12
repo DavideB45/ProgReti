@@ -28,8 +28,8 @@ public class ConcurrentArrayList<E>{
     public synchronized void remove(int i){
         list.remove(i);
     }
-    public synchronized void remove(E e){
-        list.remove(e);
+    public synchronized boolean remove(E e){
+        return list.remove(e);
     }
     public synchronized boolean contains(E e){
         return list.contains(e);

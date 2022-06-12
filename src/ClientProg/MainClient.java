@@ -2,15 +2,15 @@ package ClientProg;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.rmi.NotBoundException;
 import java.util.ArrayList;
 
 public class MainClient {
     public static void main(String[] args){
-        // connect to local server
         ServerConnection serverConn;
         try {
             serverConn = new ServerConnection(InetAddress.getLocalHost(), 8080);
-        } catch (IOException e) {
+        } catch (IOException | NotBoundException e) {
             e.printStackTrace();
             return;
         }

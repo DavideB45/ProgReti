@@ -1,5 +1,8 @@
 package ServerProg;
 
+import ClientProg.FollowerCallback;
+
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 public class Utente {
@@ -9,6 +12,7 @@ public class Utente {
     private final ConcurrentArrayList<String> followers = new ConcurrentArrayList<>();
     private final ConcurrentArrayList<String> following = new ConcurrentArrayList<>();
     private final ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
+    private final ArrayList<FollowerCallback> followersCallbacks = new ArrayList<>();
 
     public Utente(String username, String password, ArrayList<String> tags){
         if(username == null || password == null || tags == null){
@@ -51,6 +55,34 @@ public class Utente {
     public ArrayList<String> getFollowers(){
         return followers.getListCopy();
     }
+    public synchronized boolean addCallback(FollowerCallback callback){
+        if (callback == null){
+            return false;
+        }
+        if (followersCallbacks.contains(callback)){
+            return true;
+        }
+        return followersCallbacks.add(callback);
+    }
+    public synchronized boolean removeCallback(FollowerCallback callback){
+        if (callback == null){
+            return false;
+        }
+        return followersCallbacks.remove(callback);
+    }
+    public synchronized void notifyAll(String name, boolean followState){
+        for(FollowerCallback callback : followersCallbacks){
+            try{
+                if(followState){
+                    callback.newFollower(name);
+                } else{
+                    callback.newUnfollow(name);
+                }
+            } catch (RemoteException e){
+                followersCallbacks.remove(callback);
+            }
+        }
+    }
     public boolean addFollower(String username){
         if(username == null){
             throw new NullPointerException("username mancante");
@@ -58,13 +90,20 @@ public class Utente {
         if(username.equals(this.username)){
             return false;
         }
-        return following.addIfAbsent(username);
+        if(following.addIfAbsent(username)){
+            notifyAll(username, true);
+            return true;
+        } else {
+            return false;
+        }
     }
     public void removeFollower(String username) throws NullPointerException{
         if(username == null){
             throw new NullPointerException("username mancante");
         }
-        following.remove(username);
+        if(following.remove(username)){
+            notifyAll(username, false);
+        }
     }
 
     // return a copy of all following

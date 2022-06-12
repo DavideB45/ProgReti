@@ -1,5 +1,7 @@
 package ServerProg;
 
+import ClientProg.FollowerCallback;
+
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,8 +10,9 @@ public class SocialNetwork implements Enrollment {
     private final ConcurrentHashMap<String, Utente> utenti = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, Post> posts = new ConcurrentHashMap<>();
 
-    public SocialNetwork() throws RemoteException {
+    public SocialNetwork(){
     }
+
 
     public String randomMethod() throws RemoteException {
         float random = (float) Math.random();
@@ -27,6 +30,45 @@ public class SocialNetwork implements Enrollment {
             return false;
         } else{
             return true;
+        }
+    }
+
+    @Override
+    public int registerCallback(FollowerCallback callback, String user, String password) throws RemoteException, NullPointerException {
+        if(callback == null || user == null || password == null){
+            throw new NullPointerException("missing field");
+        }
+        Utente u = utenti.get(user);
+        if(u == null){
+            return 404;
+        }
+        if(!u.checkPassword(password)){
+            return 403;
+        }
+        if(u.addCallback(callback)){
+            callback.setOldFollowers(u.getFollowers());
+            return 200;
+        } else{
+            return 500;
+        }
+    }
+
+    @Override
+    public int unregisterCallback(FollowerCallback callback, String user, String password) throws RemoteException, NullPointerException {
+        if(callback == null || user == null || password == null){
+            throw new NullPointerException("missing field");
+        }
+        Utente u = utenti.get(user);
+        if(u == null){
+            return 404;
+        }
+        if(!u.checkPassword(password)){
+            return 403;
+        }
+        if(u.removeCallback(callback)){
+            return 200;
+        } else{
+            return 500;
         }
     }
 
