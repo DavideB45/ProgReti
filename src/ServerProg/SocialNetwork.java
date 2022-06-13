@@ -1,6 +1,7 @@
 package ServerProg;
 
 import ClientProg.FollowerCallback;
+import ClientProg.PostHead;
 import ClientProg.SimplePost;
 import ClientProg.SimpleUtente;
 
@@ -136,6 +137,19 @@ public class SocialNetwork implements Enrollment {
         }
         return followersSimple;
     }
+    public ArrayList<SimpleUtente> getFollowing(Utente user) {
+        if (user == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<String> following = user.getFollowing();
+        ArrayList<SimpleUtente> followingSimple = new ArrayList<>();
+        Utente utente;
+        for (String followed : following) {
+            utente = utenti.get(followed);
+            followingSimple.add(new SimpleUtente(followed, utente.getTags()));
+        }
+        return followingSimple;
+    }
 
     public int post(Utente user, SimplePost post) {
         if (user == null || post == null) {
@@ -153,5 +167,34 @@ public class SocialNetwork implements Enrollment {
     }
     public Post getPost(int id) {
         return posts.get(id);
+    }
+    public ArrayList<PostHead> getPosts(Utente user) {
+        if (user == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<PostHead> postHeads = new ArrayList<>();
+        ArrayList<Integer> postIds = user.getPosts();
+        for (int id : postIds) {
+            postHeads.add(posts.get(id).getHead());
+        }
+        return postHeads;
+    }
+    public ArrayList<PostHead> showFeed(Utente user) {
+        if (user == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<PostHead> postHeads = new ArrayList<>();
+        ArrayList<String> following = user.getFollowing();
+        long lastWatch = user.getLastFeedWatch();
+        for (String follower : following) {
+            ArrayList<Integer> postIds = utenti.get(follower).getPosts();
+            for (int id : postIds) {
+                Post p = posts.get(id);
+                if(p != null && p.postedAfter(lastWatch)){
+                    postHeads.add(p.getHead());
+                }
+            }
+        }
+        return postHeads;
     }
 }

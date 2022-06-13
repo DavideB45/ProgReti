@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 public class Utente {
+    private static final int MINUTES_TO_UPDATE_FEED = 60;
     private final String username;
     private final String password;
     private final ArrayList<String> tags;
@@ -14,6 +15,7 @@ public class Utente {
     private final ConcurrentArrayList<String> following = new ConcurrentArrayList<>();
     private final ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
     private final ArrayList<FollowerCallback> followersCallbacks = new ArrayList<>();
+    private long lastFeedWatch;
 
     public Utente(String username, String password, ArrayList<String> tags){
         if(username == null || password == null || tags == null){
@@ -25,6 +27,7 @@ public class Utente {
         if(password.length() > 20){
             throw new IllegalArgumentException("password troppo lunga");
         }
+        lastFeedWatch = System.currentTimeMillis() - MINUTES_TO_UPDATE_FEED * 30 * 1000;
         this.username = username;
         this.password = password;
         this.tags = tags;
@@ -139,6 +142,22 @@ public class Utente {
     public void addPost(int post){
         posts.add(post);
     }
+    // return a copy of all posts ids
+    public ArrayList<Integer> getPosts(){
+        return posts.getListCopy();
+    }
+    // return the last time the user watched the feed and eventually update it
+    public long getLastFeedWatch(){
+        long last = lastFeedWatch;
+        if(lastFeedWatch == 0){
+            lastFeedWatch = System.currentTimeMillis();
+        } else if(System.currentTimeMillis() - lastFeedWatch > 1000*60*MINUTES_TO_UPDATE_FEED){
+            lastFeedWatch = System.currentTimeMillis();
+        }
+        return last;
+    }
+
+
     @Override
     public boolean equals(Object obj) {
         return obj.getClass() == Utente.class && ((Utente)obj).getUsername().equals(username);

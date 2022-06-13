@@ -1,6 +1,7 @@
 package ServerProg;
 
 
+import ClientProg.PostHead;
 import ClientProg.SimplePost;
 import ClientProg.SimpleUtente;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -119,7 +120,7 @@ public class MainServer {
                     if(user == null){
                         u.answer("401\n\n");
                     } else {
-                        ArrayList<SimpleUtente> list = sn.getFollowers(user);
+                        ArrayList<SimpleUtente> list = sn.getFollowing(user);
                         if (list == null) {
                             u.answer("404\n\n");
                         } else {
@@ -135,6 +136,19 @@ public class MainServer {
                         u.answer(sn.unfollow(user, args[0]) + "\n\n");
                     }
                     break;
+                case 9:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        ArrayList<PostHead> posts = sn.getPosts(user);
+                        if (posts == null) {
+                            u.answer("404\n\n");
+                        } else {
+                            String jsonList = mapper.writeValueAsString(posts);
+                            u.answer(200 +"\n"+ jsonList + "\n\n");
+                        }
+                    }
+                    break;
                 case 10:
                     if(user == null){
                         u.answer("401\n\n");
@@ -145,6 +159,19 @@ public class MainServer {
                             u.answer("400\n\n");
                         } else {
                             u.answer("200\n"+ num + "\n\n");
+                        }
+                    }
+                    break;
+                case 11:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        ArrayList<PostHead> posts = sn.showFeed(user);
+                        if (posts == null) {
+                            u.answer("500\n\n");
+                        } else {
+                            String jsonList = mapper.writeValueAsString(posts);
+                            u.answer(200 +"\n"+ jsonList + "\n\n");
                         }
                     }
                     break;

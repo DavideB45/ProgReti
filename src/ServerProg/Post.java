@@ -1,5 +1,7 @@
 package ServerProg;
 
+import ClientProg.PostHead;
+
 import java.util.HashMap;
 
 public class Post {
@@ -46,6 +48,12 @@ public class Post {
     }
     public long getDate() {
         return date;
+    }
+    public PostHead getHead(){
+        return new PostHead(id, creator, title);
+    }
+    public boolean postedAfter(long date){
+        return this.date > date;
     }
 
     public synchronized int getUpVotes() {

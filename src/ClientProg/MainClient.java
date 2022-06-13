@@ -48,7 +48,8 @@ public class MainClient {
                     case "show":
                         answer = switch (splitReq[1]) {
                             case "post" -> serverConn.showPost(splitReq[2]);
-                            case "blog" -> "non implementato";
+                            case "feed" -> serverConn.showFeed();
+                            case "blog" -> "scrivi solo blog";
                             default -> "operazione non riconosciuta";
                         };
                         break;
@@ -58,6 +59,9 @@ public class MainClient {
                             case "followers" -> serverConn.listFollowers();
                             default -> "operazione non riconosciuta";
                         };
+                        break;
+                    case "blog":
+                        answer = serverConn.viewBlog();
                         break;
                     default:
                         answer = "operazione non riconosciuta";

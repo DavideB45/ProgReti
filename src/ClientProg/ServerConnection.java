@@ -237,6 +237,51 @@ public class ServerConnection {
             return status + ": unable to show post";
         }
     }
+    public String viewBlog() throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = "09\n\n".getBytes(StandardCharsets.UTF_8);
+        oStr.write(message, 0, message.length);
+        String status = iStr.readLine();
+        int code = Integer.decode(status);
+        if (code == 200) {
+            String jsonHeads = iStr.readLine();
+            iStr.readLine();
+            ArrayList<PostHead> heads = mapper.readValue(jsonHeads, new TypeReference<ArrayList<PostHead>>() {});
+            StringBuilder sb = new StringBuilder();
+            for (int i = heads.size() - 1; i >= 0; i--) {
+                PostHead head = heads.get(i);
+                sb.append(head.getId() + " " + head.getUsername() + "\n" + head.getTitle() + "\n");
+            }
+            return sb.toString();
+        } else {
+            iStr.readLine();
+            return status + ": unable to view blog";
+        }
+    }
+    public String showFeed() throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"11", "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        int code = Integer.decode(status);
+        if (code == 200) {
+            String jsonPosts = iStr.readLine();
+            iStr.readLine();
+            ArrayList<PostHead> feed = mapper.readValue(jsonPosts, new TypeReference<ArrayList<PostHead>>() {});
+            StringBuilder sb = new StringBuilder();
+            for (PostHead post : feed) {
+                sb.append(post.getId() + " " + post.getUsername() + "\n" + post.getTitle() + "\n");
+            }
+            return sb.toString();
+        } else {
+            iStr.readLine();
+            return status + ": unable to show feed";
+        }
+    }
 
     private byte[] writeRequest(String[] words){
         return String.join("\n", words).getBytes(StandardCharsets.UTF_8);
