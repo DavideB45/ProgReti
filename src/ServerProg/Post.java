@@ -7,6 +7,7 @@ public class Post {
     private final String creator;
     private final String title;
     private final String text;
+    private final long date;
 
     private final HashMap<String, Integer> votes = new HashMap<>();
     private int upVotes = 0;
@@ -28,6 +29,7 @@ public class Post {
         this.creator = creator;
         this.title = title;
         this.text = text;
+        this.date = System.currentTimeMillis();
     }
 
     public int getId() {
@@ -41,6 +43,9 @@ public class Post {
     }
     public String getText() {
         return text;
+    }
+    public long getDate() {
+        return date;
     }
 
     public synchronized int getUpVotes() {
@@ -79,6 +84,9 @@ public class Post {
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
+    }
+    public int getCommentCount() {
+        return comments.size();
     }
 
     @Override

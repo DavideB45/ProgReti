@@ -1,6 +1,12 @@
 package ServerProg;
 
 
+import ClientProg.SimplePost;
+import ClientProg.SimpleUtente;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -8,6 +14,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 
 public class MainServer {
     public static void main(String[] args) {
@@ -22,9 +29,6 @@ public class MainServer {
             System.out.println("Server ready");
             if (!activateRMI(8081, sn))
                 return;
-        } catch (RemoteException e) {
-            e.printStackTrace();
-            return;
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -57,7 +61,7 @@ public class MainServer {
             for (int i = 0; i < connectedClient; i++) {
 
                 if( !handleUser(users[i], sn) ){
-                    System.out.println(users[i].getIdentity().getUsername() +" disconnesso");
+                    System.out.println("uno disconnesso");
                     for (int j = i; j < connectedClient; j++){
                         users[j] = users[j + 1];
                     }
@@ -71,8 +75,8 @@ public class MainServer {
 
     private static void errorFull(Socket socket){
         try (OutputStream oStr = socket.getOutputStream()) {
-            byte[] errorMessage = "Ciao coso, siamo pieni\n".getBytes(StandardCharsets.UTF_8);
-            oStr.write(errorMessage, 0, errorMessage.length);
+            byte[] errorMessage = "Ciao coso, siamo pieni\n\n".getBytes(StandardCharsets.UTF_8);
+            oStr.write(errorMessage);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -89,34 +93,71 @@ public class MainServer {
             int operation = u.getOpCode();
             String[] args = u.getArguments();
             Utente user = u.getIdentity();
+            ObjectMapper mapper = new ObjectMapper();
             switch (operation){
                 case 2:
-                    Utente verifiedUser = sn.login(args[1], args[2]);
+                    Utente verifiedUser = sn.login(args[0], args[1]);
                     u.setIdentity(verifiedUser);
                     if (verifiedUser == null) {
-                        System.out.println("not verified");
-                        u.answer("404");
+                        u.answer("404\n\n");
                     } else {
-                        System.out.println("logged");
-                        u.answer("200");
+                        u.answer("200\n\n");
                     }
                     break;
                 case 3:
-                    u.answer(String.valueOf(sn.logout(user)));
+                    u.answer(sn.logout(user) + "\n\n");
                     u.setIdentity(null);
                     break;
                 case 7:
                     if(user == null){
-                        u.answer("401");
+                        u.answer("401\n\n");
                     } else {
-                        u.answer(String.valueOf(sn.follow(user, args[1])));
+                        u.answer(sn.follow(user, args[0]) + "\n\n");
+                    }
+                    break;
+                case 6:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        ArrayList<SimpleUtente> list = sn.getFollowers(user);
+                        if (list == null) {
+                            u.answer("404\n\n");
+                        } else {
+                            String jsonList = mapper.writeValueAsString(list);
+                            u.answer(200 +"\n"+ jsonList + "\n\n");
+                        }
                     }
                     break;
                 case 8:
                     if(user == null){
-                        u.answer("401");
+                        u.answer("401\n\n");
                     } else {
-                        u.answer(String.valueOf(sn.unfollow(user, args[1])));
+                        u.answer(sn.unfollow(user, args[0]) + "\n\n");
+                    }
+                    break;
+                case 10:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        SimplePost post = mapper.readValue(args[0], SimplePost.class);
+                        int num = sn.post(user,post);
+                        if (num == -1) {
+                            u.answer("400\n\n");
+                        } else {
+                            u.answer("200\n"+ num + "\n\n");
+                        }
+                    }
+                    break;
+                case 12:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        Post post = sn.getPost(Integer.parseInt(args[0]));
+                        if (post == null) {
+                            u.answer("404\n\n");
+                        } else {
+                            u.answer("200\n" + mapper.writeValueAsString(new SimplePost(post)) + "\n\n");
+                        }
                     }
                     break;
                 default:
@@ -124,10 +165,18 @@ public class MainServer {
                     for (String arg: args) {
                         System.out.println(arg);
                     }
-                    u.answer("418");
+                    u.answer("418\n\n");
                     break;
             }
+        } catch (JsonMappingException | JsonParseException e) {
+            e.printStackTrace();
+            try {
+                u.answer("400\n\n");
+            } catch (IOException ex) {
+                return false;
+            }
         } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
         return true;

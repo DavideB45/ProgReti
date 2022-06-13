@@ -37,17 +37,24 @@ public class ConnectedUser {
     }
 
     public int getOpCode() throws IOException {
-        char[] status = new char[2];
-        fileIn.read(status, 0, 2);
+        String status = fileIn.readLine();
         try{
-            return Integer.parseInt(new String(status), 10);
+            return Integer.parseInt(status);
         }catch (NumberFormatException e){
             return -1;
         }
     }
 
     public String[] getArguments() throws IOException {
-        return fileIn.readLine().split(":");
+        String[] args = new String[4];
+        int i = -1;
+        do{
+            i++;
+            args[i] = fileIn.readLine();
+            System.out.print("<" + args[i] + ">");
+        }while (!args[i].equals(""));
+        System.out.println();
+        return args;
     }
 
     public void answer(String ret) throws IOException {

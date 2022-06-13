@@ -1,8 +1,8 @@
 package ServerProg;
 
 public class Comment {
-    private final String username;
-    private final String text;
+    private String username;
+    private String text;
 
     public Comment(String username, String text){
         if(username == null || text == null){
@@ -13,5 +13,21 @@ public class Comment {
         }
         this.username = username;
         this.text = text;
+    }
+
+    public synchronized void setUsername(String username) {
+        this.username = username;
+    }
+
+    public synchronized void setText(String text) {
+        this.text = text;
+    }
+
+    public synchronized String getUsername() {
+        return username;
+    }
+
+    public synchronized String getText() {
+        return text;
     }
 }

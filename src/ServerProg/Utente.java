@@ -1,6 +1,7 @@
 package ServerProg;
 
 import ClientProg.FollowerCallback;
+import ClientProg.SimpleUtente;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -70,38 +71,39 @@ public class Utente {
         }
         return followersCallbacks.remove(callback);
     }
-    public synchronized void notifyAll(String name, boolean followState){
+    public synchronized void notifyAll(String name,ArrayList<String> tags,boolean followState){
+        ArrayList<FollowerCallback> disconnected = new ArrayList<>();
         for(FollowerCallback callback : followersCallbacks){
             try{
                 if(followState){
-                    callback.newFollower(name);
+                    callback.newFollower(new SimpleUtente(name,tags));
                 } else{
-                    callback.newUnfollow(name);
+                    callback.newUnfollow(new SimpleUtente(name,tags));
                 }
             } catch (RemoteException e){
-                e.printStackTrace();
-                followersCallbacks.remove(callback);
+                disconnected.add(callback);
             }
         }
+        followersCallbacks.removeAll(disconnected);
     }
-    public boolean addFollower(String username){
+    public boolean addFollower(Utente username){
         if(username == null){
             throw new NullPointerException("username mancante");
         }
         if(username.equals(this.username)){
             return false;
         }
-        if(followers.addIfAbsent(username)){
-            notifyAll(username, true);
+        if(followers.addIfAbsent(username.getUsername())){
+            notifyAll(username.getUsername(),username.getTags(), true);
         }
         return true;
     }
-    public void removeFollower(String username) throws NullPointerException{
+    public void removeFollower(Utente username) throws NullPointerException{
         if(username == null){
             throw new NullPointerException("username mancante");
         }
-        if(followers.remove(username)){
-            notifyAll(username, false);
+        if(followers.remove(username.getUsername())){
+            notifyAll(username.getUsername(), username.getTags(), false);
         }
     }
 
@@ -118,7 +120,7 @@ public class Utente {
             return false;
         }
         following.addIfAbsent(utente.getUsername());
-        utente.addFollower(this.username);
+        utente.addFollower(this);
         return true;
     }
     // this stops to follow utente
@@ -130,9 +132,13 @@ public class Utente {
             return;
         }
         following.remove(utente.getUsername());
-        utente.removeFollower(this.username);
+        utente.removeFollower(this);
     }
 
+    // add a post to the user's posts
+    public void addPost(int post){
+        posts.add(post);
+    }
     @Override
     public boolean equals(Object obj) {
         return obj.getClass() == Utente.class && ((Utente)obj).getUsername().equals(username);

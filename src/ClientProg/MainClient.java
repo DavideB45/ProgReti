@@ -24,7 +24,11 @@ public class MainClient {
                 String[] splitReq = request.split(" ");
                 switch (splitReq[0]){
                     case "register":
-                        answer = serverConn.register(splitReq[1], splitReq[2], new ArrayList<>());
+                        ArrayList<String> tags = new ArrayList<>();
+                        for (int i = 3; i < splitReq.length; i++) {
+                            tags.add(splitReq[i]);
+                        }
+                        answer = serverConn.register(splitReq[1], splitReq[2], tags);
                         break;
                     case "login":
                         answer = serverConn.login(splitReq[1], splitReq[2]);
@@ -37,6 +41,23 @@ public class MainClient {
                         break;
                     case "unfollow":
                         answer = serverConn.unfollow(splitReq[1]);
+                        break;
+                    case "post":
+                        answer = serverConn.post(splitReq[1], splitReq[2]);
+                        break;
+                    case "show":
+                        answer = switch (splitReq[1]) {
+                            case "post" -> serverConn.showPost(splitReq[2]);
+                            case "blog" -> "non implementato";
+                            default -> "operazione non riconosciuta";
+                        };
+                        break;
+                    case "list":
+                        answer = switch (splitReq[1]) {
+                            case "following" -> serverConn.listFollowing();
+                            case "followers" -> serverConn.listFollowers();
+                            default -> "operazione non riconosciuta";
+                        };
                         break;
                     default:
                         answer = "operazione non riconosciuta";
