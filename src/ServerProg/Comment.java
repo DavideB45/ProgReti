@@ -15,6 +15,9 @@ public class Comment {
         this.text = text;
     }
 
+    public Comment() {
+    }
+
     public synchronized void setUsername(String username) {
         this.username = username;
     }

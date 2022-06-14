@@ -9,7 +9,7 @@ public class Post {
     private final String creator;
     private final String title;
     private final String text;
-    private final long date;
+    private long date;
 
     private final HashMap<String, Integer> votes = new HashMap<>();
     private int upVotes = 0;
@@ -54,6 +54,9 @@ public class Post {
     }
     public boolean postedAfter(long date){
         return this.date > date;
+    }
+    public void refreshDate(){
+        this.date = System.currentTimeMillis();
     }
 
     public synchronized int getUpVotes() {

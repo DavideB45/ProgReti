@@ -1,9 +1,7 @@
 package ClientProg;
 
-import ServerProg.Post;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -237,6 +235,83 @@ public class ServerConnection {
             return status + ": unable to show post";
         }
     }
+    public String deletePost(String postId) throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"13", postId, "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        iStr.readLine();
+        int code = Integer.decode(status);
+        if(code == 200)
+            return "post deleted";
+        if(code == 202)
+            return "post removed from blog";
+        if(code == 401)
+            return "unrecognised user";
+        if (code == 404)
+            return "post not found";
+        return status + ": unable to delete post";
+    }
+    public String rewin(String postId) throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"14", postId, "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        iStr.readLine();
+        int code = Integer.decode(status);
+        if(code == 200)
+            return "post rewined";
+        if(code == 401)
+            return "unrecognised user";
+        if (code == 404)
+            return "post not found";
+        return status + ": unable to rewin post";
+    }
+    public String rate(String postId, String rating) throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"15", postId, rating, "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        iStr.readLine();
+        int code = Integer.decode(status);
+        if(code == 200)
+            return "post rated";
+        if(code == 401)
+            return "unrecognised user";
+        if (code == 404)
+            return "post not found";
+        if (code == 409)
+            return "already rated";
+        return status + ": unable to rate post";
+    }
+    public String comment(String postId, String comment) throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"16", postId, comment, "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        iStr.readLine();
+        int code = Integer.decode(status);
+        if(code == 200)
+            return "comment posted";
+        if(code == 401)
+            return "unrecognised user";
+        if (code == 403)
+            return "need to be a follower to comment";
+        if (code == 404)
+            return "post not found";
+        if (code == 413)
+            return "comment too long";
+        return status + ": unable to comment post";
+    }
+
     public String viewBlog() throws IOException {
         if (!logged) {
             return "Not logged in";

@@ -36,6 +36,7 @@ public class SimplePost {
         this.content = original.getText();
         this.likes = original.getUpVotes();
         this.dislikes = original.getDownVotes();
+        this.comments = new ArrayList<>();
         for (int i = 0; i < original.getCommentCount(); i++) {
             this.comments.add(original.getComment(i));
         }
@@ -44,13 +45,16 @@ public class SimplePost {
     @Override
     public String toString() {
         if (comments != null) {
+            String commentsString = "";
+            for (Comment comment : comments) {
+                commentsString += comment.getUsername()+ ": "+ comment.getText() + "\n";
+            }
             return "post by: " + username +
                     "\n" + title +
                     "\n" + content +
                     "\n" + new Date(date) +
                     "\n↑" + likes + " ↓" + dislikes +
-                    "\ncomments\n" + comments +
-                    '\n';
+                    "\ncomments\n" + commentsString;
         } else {
             return "post by: " + username +
                     "\n" + title +

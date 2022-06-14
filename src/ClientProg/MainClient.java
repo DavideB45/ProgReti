@@ -63,6 +63,18 @@ public class MainClient {
                     case "blog":
                         answer = serverConn.viewBlog();
                         break;
+                    case "delete":
+                        answer = serverConn.deletePost(splitReq[1]);
+                        break;
+                    case "rewin":
+                        answer = serverConn.rewin(splitReq[1]);
+                        break;
+                    case "rate":
+                        answer = serverConn.rate(splitReq[1], splitReq[2]);
+                        break;
+                    case "comment":
+                        answer = serverConn.comment(splitReq[1], splitReq[2]);
+                        break;
                     default:
                         answer = "operazione non riconosciuta";
                         break;

@@ -77,6 +77,24 @@ public class SocialNetwork implements Enrollment {
             return 500;
         }
     }
+    private boolean hasPostInFeed(String username, int id){
+        Utente u = utenti.get(username);
+        if(u == null){
+            return false;
+        }
+        Post p = posts.get(id);
+        if(p != null && p.getCreator().equals(username)){
+            return false;
+        }
+        ArrayList<String> following = u.getFollowing();
+        for(String followingUser : following){
+            Utente followingUtente = utenti.get(followingUser);
+            if(followingUtente.hasPost(id)){
+                return true;
+            }
+        }
+        return false;
+    }
 
     public Utente login(String username, String password){
         if(username == null || password == null){
@@ -168,6 +186,81 @@ public class SocialNetwork implements Enrollment {
     public Post getPost(int id) {
         return posts.get(id);
     }
+    public int deletePost(Utente user, int id) {
+        if (user == null) {
+            return 401;
+        }
+        Post p = posts.get(id);
+        if (p == null) {
+            return 404;
+        } else if (p.getCreator().equals(user.getUsername())) {
+            user.removePost(id);
+            posts.remove(id);
+            return 200;
+        } else if (user.removePost(id)) {
+            return 202;
+        } else {
+            return 403;
+        }
+    }
+    public int rewin(Utente user, int id) {
+        if (user == null) {
+            return 401;
+        }
+        Post p = posts.get(id);
+        if (p == null) {
+            return 404;
+        } else if (hasPostInFeed(user.getUsername(), id)) {
+            if(user.addPostIfAbsent(id)){
+                p.refreshDate();
+                return 200;
+            } else{
+                return 400;
+            }
+        } else {
+            return 403;
+        }
+    }
+    public int ratePost(Utente user, int id, int rating) {
+        if (user == null) {
+            return 401;
+        }
+        Post p = posts.get(id);
+        if (p == null) {
+            return 404;
+        } else if (hasPostInFeed(user.getUsername(), id)) {
+            if(p.vote(user.getUsername(), rating)){
+                return 200;
+            } else{
+                return 409;
+            }
+        } else {
+            return 403;
+        }
+    }
+    public int comment(Utente user, int id, String comment) {
+        if (user == null || comment == null) {
+            return 400;
+        }
+        Post p = posts.get(id);
+        if (p == null) {
+            return 404;
+        }
+        try {
+            Comment c = new Comment(user.getUsername(), comment);
+            if(hasPostInFeed(user.getUsername(), id)){
+                p.addComment(c);
+                return 200;
+            } else{
+                return 403;
+            }
+        } catch (IllegalArgumentException e) {
+            return 413;
+        } catch (NullPointerException e) {
+            return 500;
+        }
+    }
+
     public ArrayList<PostHead> getPosts(Utente user) {
         if (user == null) {
             throw new NullPointerException();
@@ -175,7 +268,12 @@ public class SocialNetwork implements Enrollment {
         ArrayList<PostHead> postHeads = new ArrayList<>();
         ArrayList<Integer> postIds = user.getPosts();
         for (int id : postIds) {
-            postHeads.add(posts.get(id).getHead());
+            Post p = posts.get(id);
+            if (p != null) {
+                postHeads.add(p.getHead());
+            } else {
+                user.removePost(id);
+            }
         }
         return postHeads;
     }
@@ -192,6 +290,8 @@ public class SocialNetwork implements Enrollment {
                 Post p = posts.get(id);
                 if(p != null && p.postedAfter(lastWatch)){
                     postHeads.add(p.getHead());
+                } else if (p == null) {
+                    user.removePost(id);
                 }
             }
         }

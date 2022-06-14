@@ -25,10 +25,10 @@ public class ConcurrentArrayList<E>{
     public synchronized int size(){
         return list.size();
     }
-    public synchronized void remove(int i){
+    public synchronized void removeAt(int i){
         list.remove(i);
     }
-    public synchronized boolean remove(E e){
+    public synchronized boolean removeElement(E e){
         return list.remove(e);
     }
     public synchronized boolean contains(E e){

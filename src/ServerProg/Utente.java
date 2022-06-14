@@ -105,9 +105,15 @@ public class Utente {
         if(username == null){
             throw new NullPointerException("username mancante");
         }
-        if(followers.remove(username.getUsername())){
+        if(followers.removeElement(username.getUsername())){
             notifyAll(username.getUsername(), username.getTags(), false);
         }
+    }
+    public boolean isFollowing(String username){
+        if(username == null){
+            throw new NullPointerException("username mancante");
+        }
+        return following.contains(username);
     }
 
     // return a copy of all following
@@ -134,13 +140,25 @@ public class Utente {
         if(utente.getUsername().equals(this.username)){
             return;
         }
-        following.remove(utente.getUsername());
+        following.removeElement(utente.getUsername());
         utente.removeFollower(this);
     }
 
     // add a post to the user's posts
     public void addPost(int post){
         posts.add(post);
+    }
+    // tell if the user has a post with the given id
+    public boolean hasPost(int post){
+        return posts.contains(post);
+    }
+    // add post if it is not already in the user's posts
+    public boolean addPostIfAbsent(int post){
+        return posts.addIfAbsent(post);
+    }
+    // remove a post from the user's posts
+    public boolean removePost(int post){
+        return posts.removeElement(post);
     }
     // return a copy of all posts ids
     public ArrayList<Integer> getPosts(){

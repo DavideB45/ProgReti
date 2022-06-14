@@ -187,6 +187,34 @@ public class MainServer {
                         }
                     }
                     break;
+                case 13:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        u.answer(sn.deletePost(user, Integer.parseInt(args[0])) + "\n\n");
+                    }
+                    break;
+                case 14:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        u.answer(sn.rewin(user, Integer.parseInt(args[0])) + "\n\n");
+                    }
+                    break;
+                case 15:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        u.answer(sn.ratePost(user, Integer.parseInt(args[0]), Integer.parseInt(args[1])) + "\n\n");
+                    }
+                    break;
+                case 16:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        u.answer(sn.comment(user, Integer.parseInt(args[0]), args[1]) + "\n\n");
+                    }
+                    break;
                 default:
                     System.out.println("richiesta strana : " + operation);
                     for (String arg: args) {
@@ -205,6 +233,12 @@ public class MainServer {
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        } catch (NumberFormatException e){
+            try {
+                u.answer("400\n\n");
+            } catch (IOException ex) {
+                return false;
+            }
         }
         return true;
     }
