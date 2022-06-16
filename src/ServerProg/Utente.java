@@ -16,6 +16,7 @@ public class Utente {
     private final ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
     private final ArrayList<FollowerCallback> followersCallbacks = new ArrayList<>();
     private long lastFeedWatch;
+    private Wallet wallet = new Wallet();
 
     public Utente(String username, String password, ArrayList<String> tags){
         if(username == null || password == null || tags == null){
@@ -53,6 +54,14 @@ public class Utente {
             }
         }
         return false;
+    }
+
+    //functions useful to handle wallet
+    public void addRecord(float wincoin, int postId, long timestamp){
+        wallet.addRecord(wincoin, postId, timestamp);
+    }
+    public ArrayList<WincoinRecord> getRecords(){
+        return wallet.getRecords();
     }
 
     // return a copy of all followers

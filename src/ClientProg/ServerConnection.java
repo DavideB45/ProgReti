@@ -24,6 +24,8 @@ public class ServerConnection {
     private boolean logged = false;
     private final FollowerList followers = new FollowerList();
 
+    Thread multicastThread = null;
+
     private Registry registry;
     ServerProg.Enrollment stubSN;
     FollowerCallback callback;
@@ -91,14 +93,25 @@ public class ServerConnection {
         byte[] message = writeRequest(new String[]{"02", username, password, "\n"});
         oStr.write(message, 0, message.length);
         String status = iStr.readLine();
-        iStr.readLine();
         int code = Integer.decode(status);
         if(code == 200){
             logged = true;
             this.username = username;
             this.password = password;
+            try{
+                InetAddress multicast = InetAddress.getByName(iStr.readLine());
+                if(!multicast.equals("0")){
+                    int port = Integer.decode(iStr.readLine());
+                    multicastThread = new Thread(new NotificationReceiver(multicast, port));
+                    multicastThread.start();
+                }
+            } catch (IOException e){
+                System.out.println("Multicast non attivo");
+            }
+            iStr.readLine();
             return "logged in | " + registerForFollower();
         } else {
+            iStr.readLine();
             return status + ": wrong password or user not registered";
         }
     }
@@ -116,6 +129,7 @@ public class ServerConnection {
                 this.logged = false;
                 this.username = null;
                 this.password = null;
+                multicastThread.interrupt();
                 return "log out completed | " + statusRegister;
             } else if(code == 401){
                 return "unrecognised user";

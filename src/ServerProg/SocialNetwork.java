@@ -14,8 +14,12 @@ public class SocialNetwork implements Enrollment {
     private final ConcurrentHashMap<String, Utente> utenti = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, Post> posts = new ConcurrentHashMap<>();
     private AtomicInteger idLast = new AtomicInteger(0);
+    private Thread winCalcThread;
 
     public SocialNetwork(){
+        WincoinCalculator winC = new WincoinCalculator(1000*60*4, this.posts, this.utenti, "238.255.1.3", 3000);
+        winCalcThread = new Thread(winC);
+        winCalcThread.start();
     }
 
 

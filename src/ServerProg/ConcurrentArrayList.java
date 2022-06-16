@@ -16,6 +16,7 @@ public class ConcurrentArrayList<E>{
         }
         return copy;
     }
+
     public synchronized void add(E e){
         list.add(e);
     }

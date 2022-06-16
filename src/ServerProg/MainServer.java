@@ -102,7 +102,7 @@ public class MainServer {
                     if (verifiedUser == null) {
                         u.answer("404\n\n");
                     } else {
-                        u.answer("200\n\n");
+                        u.answer("200\n238.255.1.3\n3000\n\n");
                     }
                     break;
                 case 3:

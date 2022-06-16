@@ -2,7 +2,10 @@ package ServerProg;
 
 import ClientProg.PostHead;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Post {
     private final int id;
@@ -12,8 +15,13 @@ public class Post {
     private long date;
 
     private final HashMap<String, Integer> votes = new HashMap<>();
-    private int upVotes = 0;
-    private int downVotes = 0;
+    private AtomicInteger upVotes = new AtomicInteger(0);
+    private AtomicInteger downVotes = new AtomicInteger(0);
+
+    int iterationNumber = 0;
+    int oldUpVotes = 0;
+    int oldDownVotes = 0;
+    HashSet<String> oldComment = new HashSet<>();
 
     private final ConcurrentArrayList<Comment> comments = new ConcurrentArrayList<>();
 
@@ -33,6 +41,36 @@ public class Post {
         this.text = text;
         this.date = System.currentTimeMillis();
     }
+
+    public float calculateWincoin() {
+        iterationNumber++;
+        ArrayList<Comment> commentsCopy = this.comments.getListCopy();
+        HashMap<String, Integer> commentators = new HashMap<>();
+        for(Comment c : commentsCopy) {
+            if (!oldComment.contains(c.getUsername())) {
+                if (!commentators.containsKey(c.getUsername())) {
+                    commentators.put(c.getUsername(), 1);
+                } else {
+                    commentators.put(c.getUsername(), commentators.get(c.getUsername()) + 1);
+                }
+            }
+        }
+        oldComment.addAll(commentators.keySet());
+        double earnedWincoin = 0;
+        for(Integer i : commentators.values()){
+            earnedWincoin += 2/( 1 + Math.pow(Math.E, -(i-1)) );
+        }
+        earnedWincoin += Math.log(earnedWincoin + 1)/iterationNumber;
+        int upV = upVotes.get();
+        int downV = downVotes.get();
+        int newUpVotes = upV - oldUpVotes;
+        int newDownVotes = downV - oldDownVotes;
+        oldUpVotes = upV;
+        oldDownVotes = downV;
+        earnedWincoin += Math.log(Math.max(newUpVotes - newDownVotes, 0) + 1)/iterationNumber;
+        return (float) earnedWincoin;
+    }
+
 
     public int getId() {
         return id;
@@ -60,10 +98,10 @@ public class Post {
     }
 
     public synchronized int getUpVotes() {
-        return upVotes;
+        return upVotes.get();
     }
     public synchronized int getDownVotes() {
-        return downVotes;
+        return downVotes.get();
     }
     public synchronized boolean vote(String username, int vote){
         if(vote < 0){
@@ -73,9 +111,9 @@ public class Post {
         }
         if(votes.putIfAbsent(username, vote) == null){
             if(vote == 1){
-                upVotes++;
+                upVotes.incrementAndGet();
             } else{
-                downVotes++;
+                downVotes.incrementAndGet();
             }
             return true;
         } else {

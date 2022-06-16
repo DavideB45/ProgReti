@@ -75,6 +75,9 @@ public class MainClient {
                     case "comment":
                         answer = serverConn.comment(splitReq[1], splitReq[2]);
                         break;
+                    case "exit":
+                        // TODO: implementare chiusura pulita per ServerConnection
+                        return;
                     default:
                         answer = "operazione non riconosciuta";
                         break;

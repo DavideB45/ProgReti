@@ -1,5 +1,6 @@
 package ClientProg;
 
+import javax.swing.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
@@ -16,13 +17,11 @@ public class FollowerList implements FollowerCallback {
     @Override
     public synchronized void newFollower(SimpleUtente username) throws RemoteException {
         this.followers.add(username);
-        System.out.println("new follower: " + username.getUsername());
     }
 
     @Override
     public synchronized void newUnfollow(SimpleUtente username) throws RemoteException {
         this.followers.remove(username);
-        System.out.println("lost follower: " + username.getUsername());
     }
 
     public synchronized ArrayList<SimpleUtente> getFollowersCopy(){
