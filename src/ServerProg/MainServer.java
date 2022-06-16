@@ -4,6 +4,7 @@ package ServerProg;
 import ClientProg.PostHead;
 import ClientProg.SimplePost;
 import ClientProg.SimpleUtente;
+import ClientProg.SimpleWallet;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -215,6 +216,19 @@ public class MainServer {
                         u.answer(sn.comment(user, Integer.parseInt(args[0]), args[1]) + "\n\n");
                     }
                     break;
+                case 17:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        SimpleWallet wallet = sn.getWallet(user);
+                        if (wallet == null) {
+                            u.answer("500\n\n");
+                        } else {
+                            System.out.println(mapper.writeValueAsString(wallet));
+                            u.answer("200\n" + mapper.writeValueAsString(wallet) + "\n\n");
+                        }
+                    }
+                    break;
                 default:
                     System.out.println("richiesta strana : " + operation);
                     for (String arg: args) {
@@ -234,6 +248,7 @@ public class MainServer {
             e.printStackTrace();
             return false;
         } catch (NumberFormatException e){
+            e.printStackTrace();
             try {
                 u.answer("400\n\n");
             } catch (IOException ex) {

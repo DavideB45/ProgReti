@@ -11,6 +11,9 @@ public class WincoinRecord {
         this.timestamp = timestamp;
     }
 
+    public WincoinRecord() {
+    }
+
     public float getWincoin() {
         return wincoin;
     }

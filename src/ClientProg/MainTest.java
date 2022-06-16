@@ -1,14 +1,62 @@
 package ClientProg;
 
-import javax.swing.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.rmi.NotBoundException;
+import java.util.ArrayList;
 
 public class MainTest {
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("MainTest");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 300);
-        frame.setVisible(true);
+    public static void main(String[] args) throws IOException {
+        ServerConnection serverConn;
+        try {
+            serverConn = new ServerConnection(InetAddress.getLocalHost(), 8080);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+            return;
+        }
+        ArrayList<String> tags = new ArrayList<>();
+        tags.add("java");
+        tags.add("rmi");
+        tags.add("concurrent");
+        serverConn.register("username", "password", tags);
+        serverConn.login("username", "password");
+        serverConn.post("TITOLO", "CONTENUTO");
+        serverConn.logout("username");
 
-        JOptionPane.showConfirmDialog(null,"message", "Notification", JOptionPane.YES_NO_OPTION);
+        tags.clear();
+        tags.add("Pesticidi");
+        tags.add("Fiori");
+        tags.add("Frutti");
+        tags.add("Verdura");
+        tags.add("Carne");
+        tags.add("Pesce");
+        System.out.println(serverConn.register("Luisa", "psw", tags));
+        serverConn.login("Luisa", "psw");
+        serverConn.post("FORMICHE", "creature magnifiche le formiche");
+        serverConn.follow("username");
+        serverConn.logout("Luisa");
+
+        serverConn.login("username", "password");
+        System.out.println(serverConn.follow("Luisa"));
+        System.out.println(serverConn.rate("2", "5"));
+        serverConn.comment("2", "melglio non infastidirle");
+        System.out.println(serverConn.showPost("2"));
+        serverConn.logout("username");
+
+        tags.clear();
+        tags.add("bicycle");
+        tags.add("bike");
+        tags.add("mountain");
+        tags.add("Carrefour");
+        serverConn.register("Fabio", "psw", tags);
+        serverConn.login("Fabio", "psw");
+        serverConn.follow("Luisa");
+        serverConn.comment("2", "ben detto");
+        serverConn.rate("2", "5");
+        System.out.println(serverConn.listFollowing());
+
+
     }
 }

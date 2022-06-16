@@ -1,9 +1,6 @@
 package ServerProg;
 
-import ClientProg.FollowerCallback;
-import ClientProg.PostHead;
-import ClientProg.SimplePost;
-import ClientProg.SimpleUtente;
+import ClientProg.*;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -17,7 +14,7 @@ public class SocialNetwork implements Enrollment {
     private Thread winCalcThread;
 
     public SocialNetwork(){
-        WincoinCalculator winC = new WincoinCalculator(1000*60*4, this.posts, this.utenti, "238.255.1.3", 3000);
+        WincoinCalculator winC = new WincoinCalculator(1000*60*1, this.posts, this.utenti, "238.255.1.3", 3000);
         winCalcThread = new Thread(winC);
         winCalcThread.start();
     }
@@ -300,5 +297,12 @@ public class SocialNetwork implements Enrollment {
             }
         }
         return postHeads;
+    }
+
+    public SimpleWallet getWallet(Utente user) {
+        if (user == null) {
+            throw new NullPointerException();
+        }
+        return user.getWallet();
     }
 }

@@ -2,6 +2,7 @@ package ServerProg;
 
 import ClientProg.FollowerCallback;
 import ClientProg.SimpleUtente;
+import ClientProg.SimpleWallet;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public class Utente {
     private final ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
     private final ArrayList<FollowerCallback> followersCallbacks = new ArrayList<>();
     private long lastFeedWatch;
-    private Wallet wallet = new Wallet();
+    private final Wallet wallet = new Wallet();
 
     public Utente(String username, String password, ArrayList<String> tags){
         if(username == null || password == null || tags == null){
@@ -61,7 +62,7 @@ public class Utente {
         wallet.addRecord(wincoin, postId, timestamp);
     }
     public ArrayList<WincoinRecord> getRecords(){
-        return wallet.getRecords();
+        return wallet.getWincoinRecords();
     }
 
     // return a copy of all followers
@@ -184,6 +185,10 @@ public class Utente {
         return last;
     }
 
+    // return a copy of the user's wallet
+    public SimpleWallet getWallet(){
+        return wallet.copy();
+    }
 
     @Override
     public boolean equals(Object obj) {

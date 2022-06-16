@@ -8,6 +8,9 @@ public class ConcurrentArrayList<E>{
     public ConcurrentArrayList(){
 
     }
+    public ConcurrentArrayList(ArrayList<E> list){
+        this.list.addAll(list);
+    }
 
     public synchronized ArrayList<E> getListCopy(){
         ArrayList<E> copy = new ArrayList<>();
@@ -16,7 +19,6 @@ public class ConcurrentArrayList<E>{
         }
         return copy;
     }
-
     public synchronized void add(E e){
         list.add(e);
     }

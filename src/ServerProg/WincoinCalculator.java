@@ -45,8 +45,10 @@ public class WincoinCalculator implements Runnable {
             }
             for (Post post : posts.values()) {
                 float wincoin = post.calculateWincoin();
-                Utente creator = utenti.get(post.getCreator());
-                creator.addRecord(wincoin, post.getId(), System.currentTimeMillis());
+                if (wincoin > 0) {
+                    Utente creator = utenti.get(post.getCreator());
+                    creator.addRecord(wincoin, post.getId(), System.currentTimeMillis());
+                }
             }
             lastIteration = System.currentTimeMillis();
             if (multicastAddress != null) {

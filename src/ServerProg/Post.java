@@ -60,7 +60,7 @@ public class Post {
         for(Integer i : commentators.values()){
             earnedWincoin += 2/( 1 + Math.pow(Math.E, -(i-1)) );
         }
-        earnedWincoin += Math.log(earnedWincoin + 1)/iterationNumber;
+        earnedWincoin = Math.log(earnedWincoin + 1)/iterationNumber;
         int upV = upVotes.get();
         int downV = downVotes.get();
         int newUpVotes = upV - oldUpVotes;

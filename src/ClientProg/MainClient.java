@@ -75,6 +75,14 @@ public class MainClient {
                     case "comment":
                         answer = serverConn.comment(splitReq[1], splitReq[2]);
                         break;
+                    case "wallet":
+                        if (splitReq.length == 1) {
+                            answer = serverConn.wallet();
+                        } else {
+                            //answer = serverConn.walletBTC();
+                            answer = "operazione non implementata";
+                        }
+                        break;
                     case "exit":
                         // TODO: implementare chiusura pulita per ServerConnection
                         return;

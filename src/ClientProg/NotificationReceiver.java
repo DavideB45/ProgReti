@@ -20,14 +20,14 @@ public class NotificationReceiver implements Runnable{
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             try {
                 socket.receive(packet);
+                if(Thread.currentThread().isInterrupted())
+                    break;
                 String message = new String(packet.getData(), 0, packet.getLength());
-                JOptionPane.showConfirmDialog(null,message, "Show wallet?", JOptionPane.YES_NO_OPTION);
+                System.out.println(message);
             } catch (Exception e) {
-                if (Thread.currentThread().isInterrupted()) {
-                    socket.close();
-                    return;
-                }
+                e.printStackTrace();
             }
         }
+        socket.close();
     }
 }

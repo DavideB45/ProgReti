@@ -1,5 +1,6 @@
 package ClientProg;
 
+import ServerProg.Wallet;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -103,6 +104,7 @@ public class ServerConnection {
                 if(!multicast.equals("0")){
                     int port = Integer.decode(iStr.readLine());
                     multicastThread = new Thread(new NotificationReceiver(multicast, port));
+                    multicastThread.setDaemon(true);
                     multicastThread.start();
                 }
             } catch (IOException e){
@@ -242,7 +244,6 @@ public class ServerConnection {
             String jsonPost = iStr.readLine();
             iStr.readLine();
             SimplePost post = mapper.readValue(jsonPost, SimplePost.class);
-            //return "post by: " + post.getUsername() + " \n " + "title: " + post.getTitle() + " \n " + "text: " + post.getContent();
             return post.toString();
         } else {
             iStr.readLine();
@@ -369,6 +370,25 @@ public class ServerConnection {
         } else {
             iStr.readLine();
             return status + ": unable to show feed";
+        }
+    }
+
+    public String wallet() throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"17", "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        int code = Integer.decode(status);
+        if (code == 200) {
+            String jsonWallet = iStr.readLine();
+            iStr.readLine();
+            SimpleWallet wallet = mapper.readValue(jsonWallet, SimpleWallet.class);
+            return wallet.toString();
+        } else {
+            iStr.readLine();
+            return status + ": unable to show wallet";
         }
     }
 
