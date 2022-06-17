@@ -17,12 +17,15 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class MainServer {
     public static void main(String[] args) {
         SocialNetwork sn;
         ServerSocket serverSocket;
         ConnectedUser[] users = new ConnectedUser[4];
+        WncBtcCalculator exchanger = new WncBtcCalculator();
         try {
             sn = new SocialNetwork();
             serverSocket = new ServerSocket(8080);
@@ -62,7 +65,7 @@ public class MainServer {
             }
             for (int i = 0; i < connectedClient; i++) {
 
-                if( !handleUser(users[i], sn) ){
+                if( !handleUser(users[i], sn, exchanger) ){
                     System.out.println("uno disconnesso");
                     for (int j = i; j < connectedClient; j++){
                         users[j] = users[j + 1];
@@ -84,7 +87,7 @@ public class MainServer {
         }
     }
 
-    private static boolean handleUser(ConnectedUser u, SocialNetwork sn){
+    private static boolean handleUser(ConnectedUser u, SocialNetwork sn, WncBtcCalculator exchange){
         if (!u.isConnected()){
             return false;
         }
@@ -227,6 +230,22 @@ public class MainServer {
                             System.out.println(mapper.writeValueAsString(wallet));
                             u.answer("200\n" + mapper.writeValueAsString(wallet) + "\n\n");
                         }
+                    }
+                    break;
+                case 18:
+                    if(user == null){
+                        u.answer("401\n\n");
+                    } else {
+                        float btc = sn.getWincoin(user);
+                        if (btc >= 0) {
+                            btc = exchange.WNCtoBTC(btc);
+                            if (btc == -1)
+                                u.answer("503\n\n");
+                            else
+                                u.answer("200\n" + btc + "\n\n");
+                        }
+                        else
+                            u.answer("500\n\n");
                     }
                     break;
                 default:

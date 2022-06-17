@@ -78,9 +78,10 @@ public class MainClient {
                     case "wallet":
                         if (splitReq.length == 1) {
                             answer = serverConn.wallet();
+                        } else if(splitReq[1].equals("btc")){
+                            answer = serverConn.getWalletInBitcoin();
                         } else {
-                            //answer = serverConn.walletBTC();
-                            answer = "operazione non implementata";
+                            answer = "operazione non riconosciuta";
                         }
                         break;
                     case "exit":

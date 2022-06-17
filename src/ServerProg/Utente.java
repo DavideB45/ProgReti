@@ -189,6 +189,9 @@ public class Utente {
     public SimpleWallet getWallet(){
         return wallet.copy();
     }
+    public float getWincoin(){
+        return wallet.getBalance();
+    }
 
     @Override
     public boolean equals(Object obj) {

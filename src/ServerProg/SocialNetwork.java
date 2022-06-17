@@ -305,4 +305,10 @@ public class SocialNetwork implements Enrollment {
         }
         return user.getWallet();
     }
+    public float getWincoin(Utente user) {
+        if (user == null) {
+            throw new NullPointerException();
+        }
+        return user.getWincoin();
+    }
 }

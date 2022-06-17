@@ -391,6 +391,25 @@ public class ServerConnection {
             return status + ": unable to show wallet";
         }
     }
+    public String getWalletInBitcoin() throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        byte[] message = writeRequest(new String[]{"18", "\n"});
+        oStr.write(message);
+        String status = iStr.readLine();
+        int code = Integer.decode(status);
+        if (code == 200) {
+            String btc = iStr.readLine();
+            iStr.readLine();
+            return btc + " BTC";
+        } else if (code == 503){
+            iStr.readLine();
+            return "service unavailable";
+        } else {
+            return code + ": unable to process";
+        }
+    }
 
     private byte[] writeRequest(String[] words){
         return String.join("\n", words).getBytes(StandardCharsets.UTF_8);
