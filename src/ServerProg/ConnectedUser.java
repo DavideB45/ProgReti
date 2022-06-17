@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.charset.StandardCharsets;
 
 public class ConnectedUser {
@@ -13,6 +16,9 @@ public class ConnectedUser {
     private BufferedReader fileIn;
     private Socket fileSocket;
     private long lastConnection;
+
+    private int operation;
+    private String[] args;
 
 
     public ConnectedUser(Socket uSocket) throws IOException {
@@ -35,7 +41,6 @@ public class ConnectedUser {
             return false;
         }
     }
-
     public int getOpCode() throws IOException {
         String status = fileIn.readLine();
         try{
@@ -44,7 +49,6 @@ public class ConnectedUser {
             return -1;
         }
     }
-
     public String[] getArguments() throws IOException {
         String[] args = new String[4];
         int i = -1;
@@ -57,6 +61,32 @@ public class ConnectedUser {
         return args;
     }
 
+    public void setResponse(int code, String[] values) throws IOException {
+        //TO DO: implement buffer
+    }
+    public boolean sendResponse() throws IOException {
+        //TO DO: implement buffer
+        // true if completed write, false if not
+        return true;
+    }
+    public boolean readRequest() throws IOException {
+        //TO DO: implement buffer
+        // true if full request, false if not
+        return true;
+    }
+    public SelectionKey getKey() {
+        // TO DO: implement buffer
+        return fileSocket.getChannel().keyFor(null);
+    }
+    public int getOperation() {
+        // TO DO: make a valid operation
+        return operation;
+    }
+    public String[] getRequest() throws IOException {
+        //TO DO: make a valid String[]
+        // return request
+        return null;
+    }
     public void answer(String ret) throws IOException {
         fileOut.write(ret.getBytes(StandardCharsets.UTF_8), 0, ret.getBytes(StandardCharsets.UTF_8).length);
     }
