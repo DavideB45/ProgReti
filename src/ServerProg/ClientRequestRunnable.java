@@ -29,18 +29,26 @@ public class ClientRequestRunnable implements Runnable{
     @Override
     public void run() {
         try {
+            System.out.printf("REQ readable[%b]\twritable[%b]\n", u.getKey().isReadable(), u.getKey().isWritable());
             if(u.getKey().isReadable()){
                 if(u.readRequest()){
-                    // handle request
-                    int opCode = u.getOpCode();
-                    String[] args = u.getArguments();
-                    handleUser(opCode, args);
-                    // next should be a write operation
-                    u.getKey().interestOps(SelectionKey.OP_WRITE);
+                    // request is fully read
+                    System.out.println("Request fully read");
+                    int opCode = u.getOperation();
+                    String[] args = u.getArgs();
+                    if(! handleUser(opCode, args)){
+                        u.getKey().cancel();
+                    } else {
+                        u.getKey().interestOps(SelectionKey.OP_WRITE);
+                        selector.wakeup();
+                    }
+                } else {
+                    u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
                 }
             } else if (u.getKey().isWritable()){
                 if(u.sendResponse()){
+                    System.out.println("Response sent");
                     // answering done, change selection key to read
                     u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();

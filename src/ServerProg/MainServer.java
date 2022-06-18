@@ -11,27 +11,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.*;
+import java.nio.channels.*;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class MainServer {
     public static void main(String[] args) {
         SocialNetwork sn;
-        ServerSocket serverSocket;
-        ConnectedUser[] users = new ConnectedUser[4];
+        ServerSocketChannel serverSocket;
+        SocketChannel clientSocket;
+        Selector selector;
+        int connectedClient = 0;
         WncBtcCalculator exchanger = new WncBtcCalculator();
+        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(1, 10, 10,
+                TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(15));
         try {
             sn = new SocialNetwork();
-            serverSocket = new ServerSocket(8080);
-            serverSocket.setSoTimeout(10);
+            serverSocket = ServerSocketChannel.open();
+            serverSocket.socket().bind(new InetSocketAddress(8080));
+            serverSocket.configureBlocking(false);
             System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
-            System.out.println("Server ready");
+            selector = Selector.open();
+            serverSocket.register(selector, SelectionKey.OP_ACCEPT);
             if (!activateRMI(8081, sn))
                 return;
         } catch (IOException e) {
@@ -39,41 +48,41 @@ public class MainServer {
             return;
         }
 
-        int connectedClient = 0;
-        Socket socket;
         while (true) {
             try {
-                socket = serverSocket.accept();
-                connectedClient++;
-                if (connectedClient >= users.length) {
-                    errorFull(socket);
-                    connectedClient--;
-                } else {
-                    users[connectedClient -1] = new ConnectedUser(socket);
-                    System.out.println("coso connesso\n");
+                if (selector.select() == 0) {
+                    System.out.println("waken");
                 }
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                Iterator<SelectionKey> iter = selectedKeys.iterator();
+                while (iter.hasNext()) {
+                    SelectionKey key = iter.next();
+                    iter.remove();
+                    if (key.isAcceptable()) {
+                        clientSocket = serverSocket.accept();
+                        clientSocket.configureBlocking(false);
+                        SelectionKey newKey = clientSocket.register(selector, SelectionKey.OP_READ);
+                        ConnectedUser newUser = new ConnectedUser(clientSocket, newKey);
+                        newKey.attach(newUser);
+                        connectedClient++;
+                    } else if(key.isWritable() || key.isReadable()) {
+                        // add thread to handle request
+                        key.interestOps(0);
+                        workerPool.execute(new ClientRequestRunnable((ConnectedUser) key.attachment(), selector, exchanger, sn));
+                    }
+                }
+
             } catch (SocketTimeoutException e){
                 //System.out.println(connectedClient);
             } catch (IOException e) {
                 e.printStackTrace();
                 try {
+                    selector.close();
                     serverSocket.close();
                 } catch (IOException ex) {
                     return;
                 }
                 return;
-            }
-            for (int i = 0; i < connectedClient; i++) {
-
-                if( !handleUser(users[i], sn, exchanger) ){
-                    System.out.println("uno disconnesso");
-                    for (int j = i; j < connectedClient; j++){
-                        users[j] = users[j + 1];
-                    }
-                    connectedClient--;
-                    break;
-                }
-
             }
         }
     }
@@ -86,7 +95,7 @@ public class MainServer {
             e.printStackTrace();
         }
     }
-
+/* old function
     private static boolean handleUser(ConnectedUser u, SocialNetwork sn, WncBtcCalculator exchange){
         if (!u.isConnected()){
             return false;
@@ -276,6 +285,7 @@ public class MainServer {
         }
         return true;
     }
+ */
 
     private static boolean activateRMI(int port, SocialNetwork sn) {
         try {

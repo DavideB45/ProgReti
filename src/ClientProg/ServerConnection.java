@@ -92,6 +92,14 @@ public class ServerConnection {
             return "Already logged in";
         }
         byte[] message = writeRequest(new String[]{"02", username, password, "\n"});
+        int mlrngth = message.length;
+        byte[] length = new byte[Integer.BYTES];
+        // vouefyv cbaeruy o mio dio
+        for (int i = 0; i < length.length; i++) {
+            length[length.length - i - 1] = (byte) (mlrngth & 0xFF);
+            mlrngth >>= 8;
+        }
+        oStr.write(length);
         oStr.write(message, 0, message.length);
         String status = iStr.readLine();
         int code = Integer.decode(status);

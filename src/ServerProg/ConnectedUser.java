@@ -1,33 +1,33 @@
 package ServerProg;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.nio.channels.SelectableChannel;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
 public class ConnectedUser {
     private Utente identity;
-    private OutputStream fileOut;
-    private BufferedReader fileIn;
-    private Socket fileSocket;
+    private final SocketChannel sChannel;
+    private final SelectionKey key;
     private long lastConnection;
 
     private int operation;
     private String[] args;
+    private final ByteBuffer[] RequestBuffer;
+    private ByteBuffer ResponseBuffer;
 
 
-    public ConnectedUser(Socket uSocket) throws IOException {
-            fileOut = uSocket.getOutputStream();
-            fileIn = new BufferedReader(new InputStreamReader(uSocket.getInputStream()));
-            fileSocket = uSocket;
+    public ConnectedUser(SocketChannel uSocket, SelectionKey key) throws IOException {
+            sChannel = uSocket;
             lastConnection = System.currentTimeMillis();
+            this.key = key;
+            sChannel.configureBlocking(false);
+            RequestBuffer = new ByteBuffer[]{ByteBuffer.allocate(Integer.BYTES), ByteBuffer.allocate(1024)};
     }
 
+/* old functions
+    @Deprecated
     public boolean hasRequest(){
         try {
             if(fileIn.ready()){
@@ -41,6 +41,7 @@ public class ConnectedUser {
             return false;
         }
     }
+    @Deprecated
     public int getOpCode() throws IOException {
         String status = fileIn.readLine();
         try{
@@ -49,6 +50,7 @@ public class ConnectedUser {
             return -1;
         }
     }
+    @Deprecated
     public String[] getArguments() throws IOException {
         String[] args = new String[4];
         int i = -1;
@@ -60,36 +62,72 @@ public class ConnectedUser {
         System.out.println();
         return args;
     }
+*/
 
     public void setResponse(int code, String[] values) throws IOException {
-        //TO DO: implement buffer
+        if (ResponseBuffer == null) {
+            ResponseBuffer = ByteBuffer.allocate(Integer.BYTES + 1024);
+        } else {
+            ResponseBuffer.clear();
+        }
+        ResponseBuffer.put(Integer.toString(code).getBytes(StandardCharsets.UTF_8));
+        if (values != null){
+            for (String arg : values) {
+                ResponseBuffer.put("\n".getBytes(StandardCharsets.UTF_8));
+                ResponseBuffer.put(arg.getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        ResponseBuffer.put("\n\n".getBytes(StandardCharsets.UTF_8));
+        ResponseBuffer.flip();
     }
     public boolean sendResponse() throws IOException {
-        //TO DO: implement buffer
-        // true if completed write, false if not
-        return true;
+        sChannel.write(ResponseBuffer);
+        if (ResponseBuffer.hasRemaining()) {
+            return false;
+        } else {
+            ResponseBuffer.clear();
+            return true;
+        }
     }
     public boolean readRequest() throws IOException {
-        //TO DO: implement buffer
-        // true if full request, false if not
-        return true;
+        sChannel.read(RequestBuffer);
+        int dim = 0;
+        if(!RequestBuffer[0].hasRemaining()){
+            RequestBuffer[0].flip();
+            dim = RequestBuffer[0].getInt();
+            System.out.println(dim);
+        } else {
+            return false;
+        }
+        if(RequestBuffer[1].position() == dim){
+            RequestBuffer[1].flip();
+            String req = new String(RequestBuffer[1].array(), 0, dim, StandardCharsets.UTF_8);
+            operation = Integer.parseInt(req.substring(0, req.indexOf("\n")));
+            args = req.substring(req.indexOf("\n") + 1).split("\n");
+            RequestBuffer[0].clear();
+            RequestBuffer[1].clear();
+            return true;
+        }
+        return false;
     }
     public SelectionKey getKey() {
-        // TO DO: implement buffer
-        return fileSocket.getChannel().keyFor(null);
+        return key;
     }
     public int getOperation() {
-        // TO DO: make a valid operation
         return operation;
     }
-    public String[] getRequest() throws IOException {
-        //TO DO: make a valid String[]
-        // return request
-        return null;
+    public String[] getArgs() throws IOException {
+        return args;
     }
-    public void answer(String ret) throws IOException {
-        fileOut.write(ret.getBytes(StandardCharsets.UTF_8), 0, ret.getBytes(StandardCharsets.UTF_8).length);
+    public void disconnect(){
+        try {
+            sChannel.close();
+            key.cancel();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
 
     public void setIdentity(Utente user){
         this.identity = user;
@@ -99,6 +137,7 @@ public class ConnectedUser {
     }
 
     public boolean isConnected(){
+        boolean state = sChannel.isOpen() && sChannel.isConnected() && operation != -1;
         return lastConnection + 1000*240 > System.currentTimeMillis();
     }
 
