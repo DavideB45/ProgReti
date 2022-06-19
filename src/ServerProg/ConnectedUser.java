@@ -10,7 +10,6 @@ public class ConnectedUser {
     private Utente identity;
     private final SocketChannel sChannel;
     private final SelectionKey key;
-    private long lastConnection;
 
     private int operation;
     private String[] args;
@@ -20,49 +19,10 @@ public class ConnectedUser {
 
     public ConnectedUser(SocketChannel uSocket, SelectionKey key) throws IOException {
             sChannel = uSocket;
-            lastConnection = System.currentTimeMillis();
             this.key = key;
             sChannel.configureBlocking(false);
             RequestBuffer = new ByteBuffer[]{ByteBuffer.allocate(Integer.BYTES), ByteBuffer.allocate(1024)};
     }
-
-/* old functions
-    @Deprecated
-    public boolean hasRequest(){
-        try {
-            if(fileIn.ready()){
-                lastConnection = System.currentTimeMillis();
-                return true;
-            } else {
-                return false;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-    @Deprecated
-    public int getOpCode() throws IOException {
-        String status = fileIn.readLine();
-        try{
-            return Integer.parseInt(status);
-        }catch (NumberFormatException e){
-            return -1;
-        }
-    }
-    @Deprecated
-    public String[] getArguments() throws IOException {
-        String[] args = new String[4];
-        int i = -1;
-        do{
-            i++;
-            args[i] = fileIn.readLine();
-            System.out.print("<" + args[i] + ">");
-        }while (!args[i].equals(""));
-        System.out.println();
-        return args;
-    }
-*/
 
     public void setResponse(int code, String[] values) throws IOException {
         if (ResponseBuffer == null) {
@@ -90,7 +50,10 @@ public class ConnectedUser {
         }
     }
     public boolean readRequest() throws IOException {
-        sChannel.read(RequestBuffer);
+        if(sChannel.read(RequestBuffer) == -1){
+            operation = -1;
+            return true;
+        }
         int dim = 0;
         if(!RequestBuffer[0].hasRemaining()){
             RequestBuffer[0].flip();
@@ -137,8 +100,7 @@ public class ConnectedUser {
     }
 
     public boolean isConnected(){
-        boolean state = sChannel.isOpen() && sChannel.isConnected() && operation != -1;
-        return lastConnection + 1000*240 > System.currentTimeMillis();
+        return operation != -1;
     }
 
 }

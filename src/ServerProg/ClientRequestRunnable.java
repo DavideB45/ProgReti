@@ -29,7 +29,6 @@ public class ClientRequestRunnable implements Runnable{
     @Override
     public void run() {
         try {
-            System.out.printf("REQ readable[%b]\twritable[%b]\n", u.getKey().isReadable(), u.getKey().isWritable());
             if(u.getKey().isReadable()){
                 if(u.readRequest()){
                     // request is fully read
@@ -49,7 +48,6 @@ public class ClientRequestRunnable implements Runnable{
             } else if (u.getKey().isWritable()){
                 if(u.sendResponse()){
                     System.out.println("Response sent");
-                    // answering done, change selection key to read
                     u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
                 }

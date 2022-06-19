@@ -32,4 +32,5 @@ public class WincoinRecord {
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
+
 }

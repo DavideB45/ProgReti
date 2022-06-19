@@ -3,6 +3,7 @@ package ClientProg;
 import ServerProg.WincoinRecord;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class SimpleWallet {
     private ArrayList<WincoinRecord> wincoinRecords;
@@ -30,7 +31,7 @@ public class SimpleWallet {
     public String toString() {
         StringBuilder recordsString = new StringBuilder();
         for (WincoinRecord record : wincoinRecords) {
-            recordsString.append(record.getPostId()).append(": ").append(record.getWincoin()).append(": ").append(record.getTimestamp()).append("\n");
+            recordsString.append(record.getPostId()).append(": ").append(record.getWincoin()).append(": ").append(new Date(record.getTimestamp())).append("\n");
         }
         return "WALLET\n" +
                 "wincoinRecords\n" + recordsString.toString() +

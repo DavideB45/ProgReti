@@ -1,6 +1,5 @@
 package ClientProg;
 
-import ServerProg.Wallet;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,7 +26,6 @@ public class ServerConnection {
 
     Thread multicastThread = null;
 
-    private Registry registry;
     ServerProg.Enrollment stubSN;
     FollowerCallback callback;
 
@@ -41,10 +39,24 @@ public class ServerConnection {
         this.port = port;
         System.out.println("Connected to " + host.getHostName() + port );
 
-        registry = LocateRegistry.getRegistry("localhost",8081);
+        Registry registry = LocateRegistry.getRegistry("localhost", 8081);
         stubSN = (ServerProg.Enrollment) registry.lookup("WINSOME");
         callback = (FollowerCallback) UnicastRemoteObject.exportObject(followers, 0);
 
+    }
+    public boolean reconnect(){
+        try {
+            oStr.close();
+            iStr.close();
+            connectionSocket.close();
+            connectionSocket = new Socket(host, port);
+            oStr = connectionSocket.getOutputStream();
+            iStr = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public String register(String name, String password, ArrayList<String> tags){
@@ -91,16 +103,7 @@ public class ServerConnection {
         if(logged){
             return "Already logged in";
         }
-        byte[] message = writeRequest(new String[]{"02", username, password, "\n"});
-        int mlrngth = message.length;
-        byte[] length = new byte[Integer.BYTES];
-        // vouefyv cbaeruy o mio dio
-        for (int i = 0; i < length.length; i++) {
-            length[length.length - i - 1] = (byte) (mlrngth & 0xFF);
-            mlrngth >>= 8;
-        }
-        oStr.write(length);
-        oStr.write(message, 0, message.length);
+        writeRequest(new String[]{"02", username, password, "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         if(code == 200){
@@ -109,12 +112,10 @@ public class ServerConnection {
             this.password = password;
             try{
                 InetAddress multicast = InetAddress.getByName(iStr.readLine());
-                if(!multicast.equals("0")){
-                    int port = Integer.decode(iStr.readLine());
-                    multicastThread = new Thread(new NotificationReceiver(multicast, port));
-                    multicastThread.setDaemon(true);
-                    multicastThread.start();
-                }
+                int port = Integer.decode(iStr.readLine());
+                multicastThread = new Thread(new NotificationReceiver(multicast, port));
+                multicastThread.setDaemon(true);
+                multicastThread.start();
             } catch (IOException e){
                 System.out.println("Multicast non attivo");
             }
@@ -131,7 +132,7 @@ public class ServerConnection {
         }
         if(username.equals(this.username)){
             String statusRegister = unregisterForFollower();
-            oStr.write("03\n\n".getBytes(StandardCharsets.UTF_8), 0, "03\n\n".getBytes(StandardCharsets.UTF_8).length);
+            writeRequest(new String[]{"03","\n"});
             String status = iStr.readLine();
             iStr.readLine();
             int code = Integer.decode(status);
@@ -155,8 +156,7 @@ public class ServerConnection {
         if(!logged){
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"07", username, "\n"});
-        oStr.write(message, 0, message.length);
+       writeRequest(new String[]{"07", username, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
         int code = Integer.decode(status);
@@ -170,8 +170,7 @@ public class ServerConnection {
         if(!logged){
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"08", username, "\n"});
-        oStr.write(message, 0, message.length);
+        writeRequest(new String[]{"08", username, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
         int code = Integer.decode(status);
@@ -200,8 +199,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"06", "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"06", "\n"});
         String status = iStr.readLine();
         if (Integer.decode(status) == 200) {
             ArrayList<SimpleUtente> following = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
@@ -228,8 +226,7 @@ public class ServerConnection {
         }
         SimplePost post = new SimplePost(username, title, text);
         String jsonPost = mapper.writeValueAsString(post);
-        byte[] message = writeRequest(new String[]{"10", jsonPost, "\n"});
-        oStr.write(message, 0, message.length);
+        writeRequest(new String[]{"10", jsonPost, "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         int postId = Integer.decode(iStr.readLine());
@@ -244,8 +241,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"12", postId, "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"12", postId, "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         if (code == 200) {
@@ -262,8 +258,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"13", postId, "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"13", postId, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
         int code = Integer.decode(status);
@@ -281,8 +276,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"14", postId, "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"14", postId, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
         int code = Integer.decode(status);
@@ -298,8 +292,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"15", postId, rating, "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"15", postId, rating, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
         int code = Integer.decode(status);
@@ -317,8 +310,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"16", postId, comment, "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"16", postId, comment, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
         int code = Integer.decode(status);
@@ -339,8 +331,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = "09\n\n".getBytes(StandardCharsets.UTF_8);
-        oStr.write(message, 0, message.length);
+        writeRequest(new String[]{"09", "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         if (code == 200) {
@@ -362,8 +353,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"11", "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"11", "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         if (code == 200) {
@@ -385,8 +375,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"17", "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"17", "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         if (code == 200) {
@@ -403,8 +392,7 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
-        byte[] message = writeRequest(new String[]{"18", "\n"});
-        oStr.write(message);
+        writeRequest(new String[]{"18", "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
         if (code == 200) {
@@ -419,7 +407,15 @@ public class ServerConnection {
         }
     }
 
-    private byte[] writeRequest(String[] words){
-        return String.join("\n", words).getBytes(StandardCharsets.UTF_8);
+    private void writeRequest(String[] words) throws IOException {
+        byte[] message = String.join("\n", words).getBytes(StandardCharsets.UTF_8);
+        int mLen = message.length;
+        byte[] length = new byte[Integer.BYTES];
+        for (int i = 0; i < length.length; i++) {
+            length[length.length - i - 1] = (byte) (mLen & 0xFF);
+            mLen >>= 8;
+        }
+        oStr.write(length);
+        oStr.write(message);
     }
 }
