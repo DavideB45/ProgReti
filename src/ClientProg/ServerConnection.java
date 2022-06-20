@@ -219,6 +219,29 @@ public class ServerConnection {
         }
 
     }
+    public String listUsers() throws IOException {
+        if (!logged) {
+            return "Not logged in";
+        }
+        writeRequest(new String[]{"04", "\n"});
+        String status = iStr.readLine();
+        if (Integer.decode(status) == 200) {
+            ArrayList<SimpleUtente> users = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
+            StringBuilder sb = new StringBuilder();
+            for (SimpleUtente u : users) {
+                sb.append(u.getUsername() + "\t");
+                for (String tag : u.getTags()) {
+                    sb.append(tag + " ");
+                }
+                sb.append("\n");
+            }
+            iStr.readLine();
+            return sb.toString();
+        } else {
+            iStr.readLine();
+            return status + ": unable to list users";
+        }
+    }
 
     public String post(String title, String text) throws IOException {
         if (!logged) {

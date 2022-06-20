@@ -79,6 +79,19 @@ public class ClientRequestRunnable implements Runnable{
                     u.setResponse(sn.logout(user), null);
                     u.setIdentity(null);
                     break;
+                case 4:
+                    if(user == null){
+                        u.setResponse(401, null);
+                    } else {
+                        ArrayList<SimpleUtente> suggested = sn.getSuggested(user);
+                        if (suggested == null) {
+                            u.setResponse(404, null);
+                        } else {
+                            String jsonList = mapper.writeValueAsString(suggested);
+                            u.setResponse(200, new String[]{jsonList});
+                        }
+                    }
+                    break;
                 case 7:
                     if(user == null){
                         u.setResponse(401, null);

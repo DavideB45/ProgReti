@@ -249,6 +249,20 @@ public class SocialNetwork implements Enrollment {
         }
         return followingSimple;
     }
+    public ArrayList<SimpleUtente> getSuggested(Utente user) {
+        if (user == null) {
+            throw new NullPointerException();
+        }
+        ArrayList<String> userTags = user.getTags();
+        ArrayList<SimpleUtente> suggested = new ArrayList<>();
+        for (Utente u : utenti.values()) {
+            if (u.checkTag(userTags) && !u.getUsername().equals(user.getUsername())) {
+                suggested.add(new SimpleUtente(u.getUsername(), u.getTags()));
+            }
+        }
+        return suggested;
+    }
+
 
     public int post(Utente user, SimplePost post) {
         if (user == null || post == null) {

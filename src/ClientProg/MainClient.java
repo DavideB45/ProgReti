@@ -57,6 +57,7 @@ public class MainClient {
                         answer = switch (splitReq[1]) {
                             case "following" -> serverConn.listFollowing();
                             case "followers" -> serverConn.listFollowers();
+                            case "users" -> serverConn.listUsers();
                             default -> "operazione non riconosciuta";
                         };
                         break;
