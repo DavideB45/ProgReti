@@ -32,11 +32,11 @@ public class ServerConnection {
     ObjectMapper mapper = new ObjectMapper();
 
     public ServerConnection(InetAddress host, int port) throws IOException, NotBoundException {
+        this.host = host;
+        this.port = port;
         connectionSocket = new Socket(host, port);
         oStr = connectionSocket.getOutputStream();
         iStr = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-        this.host = host;
-        this.port = port;
         System.out.println("Connected to " + host.getHostName() + port );
 
         Registry registry = LocateRegistry.getRegistry("localhost", 8081);
@@ -46,9 +46,12 @@ public class ServerConnection {
     }
     public boolean reconnect(){
         try {
-            oStr.close();
-            iStr.close();
-            connectionSocket.close();
+            if(oStr != null && iStr != null) {
+                oStr.close();
+                iStr.close();
+                connectionSocket.close();
+            }
+            logged = false;
             connectionSocket = new Socket(host, port);
             oStr = connectionSocket.getOutputStream();
             iStr = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
@@ -93,6 +96,7 @@ public class ServerConnection {
         }
         try {
             stubSN.unregisterCallback(callback, username, password);
+            UnicastRemoteObject.unexportObject(followers, false);
             return "notifiche disattive";
         } catch (RemoteException | NullPointerException e) {
             return "notifiche non disattivate";
@@ -252,11 +256,12 @@ public class ServerConnection {
         writeRequest(new String[]{"10", jsonPost, "\n"});
         String status = iStr.readLine();
         int code = Integer.decode(status);
-        int postId = Integer.decode(iStr.readLine());
-        iStr.readLine();
         if(code == 200){
+            int postId = Integer.decode(iStr.readLine());
+            iStr.readLine();
             return "post published with id " + postId;
         } else {
+            iStr.readLine();
             return status + ": unable to post";
         }
     }

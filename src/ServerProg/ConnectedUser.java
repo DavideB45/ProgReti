@@ -58,7 +58,6 @@ public class ConnectedUser {
         if(!RequestBuffer[0].hasRemaining()){
             RequestBuffer[0].flip();
             dim = RequestBuffer[0].getInt();
-            System.out.println(dim);
         } else {
             return false;
         }

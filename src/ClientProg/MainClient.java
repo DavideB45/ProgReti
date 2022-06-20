@@ -2,6 +2,7 @@ package ClientProg;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.rmi.NotBoundException;
 import java.util.ArrayList;
 
@@ -11,7 +12,7 @@ public class MainClient {
         try {
             serverConn = new ServerConnection(InetAddress.getLocalHost(), 8080);
         } catch (IOException | NotBoundException e) {
-            e.printStackTrace();
+            System.out.println("Impossibile connettersi al server");
             return;
         }
 
@@ -22,7 +23,7 @@ public class MainClient {
             try {
                 request = stdIn.readLine();
                 String[] splitReq = request.split(" ");
-                switch (splitReq[0]){
+                switch (splitReq[0]) {
                     case "register":
                         ArrayList<String> tags = new ArrayList<>();
                         for (int i = 0; i < splitReq.length - 3 && i < 5; i++) {
@@ -81,10 +82,17 @@ public class MainClient {
                     case "wallet":
                         if (splitReq.length == 1) {
                             answer = serverConn.wallet();
-                        } else if(splitReq[1].equals("btc")){
+                        } else if (splitReq[1].equals("btc")) {
                             answer = serverConn.getWalletInBitcoin();
                         } else {
                             answer = "operazione non riconosciuta";
+                        }
+                        break;
+                    case "reconnect":
+                        if(serverConn.reconnect()){
+                            answer = "connessione riattivata";
+                        } else {
+                            answer = "connessione non riattivata";
                         }
                         break;
                     case "exit":
@@ -95,10 +103,15 @@ public class MainClient {
                         break;
                 }
                 System.out.println(answer);
+            } catch (SocketException e) {
+                System.out.println("Connessione con server persa");
+                continue;
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ArrayIndexOutOfBoundsException e){
                 System.out.println("non hai inserito tutti i parametri");
+            } catch (NullPointerException e){
+                System.out.println("Null pointer | probabilmente server non disponibile");
             }
         }
     }

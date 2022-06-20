@@ -32,7 +32,6 @@ public class ClientRequestRunnable implements Runnable{
             if(u.getKey().isReadable()){
                 if(u.readRequest()){
                     // request is fully read
-                    System.out.println("Request fully read");
                     int opCode = u.getOperation();
                     String[] args = u.getArgs();
                     if(! handleUser(opCode, args)){
@@ -47,13 +46,14 @@ public class ClientRequestRunnable implements Runnable{
                 }
             } else if (u.getKey().isWritable()){
                 if(u.sendResponse()){
-                    System.out.println("Response sent");
+                    // response is fully sent
                     u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            u.getKey().cancel();
             // close connection
         }
     }
@@ -206,7 +206,6 @@ public class ClientRequestRunnable implements Runnable{
                         if (wallet == null) {
                             u.setResponse(500, null);
                         } else {
-                            System.out.println(mapper.writeValueAsString(wallet));
                             u.setResponse(200, new String[]{mapper.writeValueAsString(wallet)});
                         }
                     }

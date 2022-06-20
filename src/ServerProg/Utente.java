@@ -171,7 +171,7 @@ public class Utente {
         if(username == null){
             throw new NullPointerException("username mancante");
         }
-        if(username.equals(this.username)){
+        if(username.getUsername().equals(this.username)){
             return false;
         }
         if(followers.addIfAbsent(username.getUsername())){
