@@ -43,7 +43,8 @@ public class MainClient {
                         answer = serverConn.unfollow(splitReq[1]);
                         break;
                     case "post":
-                        answer = serverConn.post(splitReq[1], splitReq[2]);
+                        String[] post = request.split("\"");
+                        answer = serverConn.post(post[1], post[3]);
                         break;
                     case "show":
                         answer = switch (splitReq[1]) {
@@ -74,7 +75,8 @@ public class MainClient {
                         answer = serverConn.rate(splitReq[1], splitReq[2]);
                         break;
                     case "comment":
-                        answer = serverConn.comment(splitReq[1], splitReq[2]);
+                        String[] comment = request.split("\"");
+                        answer = serverConn.comment(splitReq[1], comment[1]);
                         break;
                     case "wallet":
                         if (splitReq.length == 1) {
