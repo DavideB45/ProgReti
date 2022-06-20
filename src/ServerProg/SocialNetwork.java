@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -379,15 +381,16 @@ public class SocialNetwork implements Enrollment {
         ArrayList<PostHead> postHeads = new ArrayList<>();
         ArrayList<String> following = user.getFollowing();
         long lastWatch = user.getLastFeedWatch();
+        HashSet<Integer> postIds = new HashSet<>();
         for (String follower : following) {
-            ArrayList<Integer> postIds = utenti.get(follower).getPosts();
-            for (int id : postIds) {
-                Post p = posts.get(id);
-                if(p != null && p.postedAfter(lastWatch)){
-                    postHeads.add(p.getHead());
-                } else if (p == null) {
-                    user.removePost(id);
-                }
+            postIds.addAll(utenti.get(follower).getPosts());
+        }
+        for (int id : postIds) {
+            Post p = posts.get(id);
+            if(p != null && p.postedAfter(lastWatch)){
+                postHeads.add(p.getHead());
+            } else if (p == null) {
+                user.removePost(id);
             }
         }
         return postHeads;
