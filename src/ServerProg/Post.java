@@ -25,6 +25,9 @@ public class Post {
     int oldDownVotes = 0;
     HashSet<String> oldComment = new HashSet<>();
 
+    HashSet<String> curator = new HashSet<>();
+    float lastWincoin = 0;
+
     private final ConcurrentArrayList<Comment> comments = new ConcurrentArrayList<>();
 
     public Post(int id, String creator, String title, String text){
@@ -44,35 +47,6 @@ public class Post {
         this.date = System.currentTimeMillis();
     }
     public Post(){}
-
-    public float calculateWincoin() {
-        iterationNumber++;
-        ArrayList<Comment> commentsCopy = this.comments.getListCopy();
-        HashMap<String, Integer> commentators = new HashMap<>();
-        for(Comment c : commentsCopy) {
-            if (!oldComment.contains(c.getUsername())) {
-                if (!commentators.containsKey(c.getUsername())) {
-                    commentators.put(c.getUsername(), 1);
-                } else {
-                    commentators.put(c.getUsername(), commentators.get(c.getUsername()) + 1);
-                }
-            }
-        }
-        oldComment.addAll(commentators.keySet());
-        double earnedWincoin = 0;
-        for(Integer i : commentators.values()){
-            earnedWincoin += 2/( 1 + Math.pow(Math.E, -(i-1)) );
-        }
-        earnedWincoin = Math.log(earnedWincoin + 1)/iterationNumber;
-        int upV = upVotes.get();
-        int downV = downVotes.get();
-        int newUpVotes = upV - oldUpVotes;
-        int newDownVotes = downV - oldDownVotes;
-        oldUpVotes = upV;
-        oldDownVotes = downV;
-        earnedWincoin += Math.log(Math.max(newUpVotes - newDownVotes, 0) + 1)/iterationNumber;
-        return (float) earnedWincoin;
-    }
 
 
     public int getId() {
@@ -165,6 +139,39 @@ public class Post {
         this.date = System.currentTimeMillis();
     }
 
+    public HashSet<String> calculateWincoin() {
+        iterationNumber++;
+        ArrayList<Comment> commentsCopy = this.comments.getListCopy();
+        HashMap<String, Integer> commentators = new HashMap<>();
+        for(Comment c : commentsCopy) {
+            if (!oldComment.contains(c.getUsername())) {
+                if (!commentators.containsKey(c.getUsername())) {
+                    commentators.put(c.getUsername(), 1);
+                } else {
+                    commentators.put(c.getUsername(), commentators.get(c.getUsername()) + 1);
+                }
+            }
+        }
+        oldComment.addAll(commentators.keySet());
+        double earnedWincoin = 0;
+        for(Integer i : commentators.values()){
+            earnedWincoin += 2/( 1 + Math.pow(Math.E, -(i-1)) );
+        }
+        earnedWincoin = Math.log(earnedWincoin + 1)/iterationNumber;
+        int upV = upVotes.get();
+        int downV = downVotes.get();
+        int newUpVotes = upV - oldUpVotes;
+        int newDownVotes = downV - oldDownVotes;
+        oldUpVotes = upV;
+        oldDownVotes = downV;
+        earnedWincoin += Math.log(Math.max(newUpVotes - newDownVotes, 0) + 1)/iterationNumber;
+        lastWincoin = (float)earnedWincoin;
+        return curator;
+    }
+    @JsonIgnore
+    public float getLastWincoin(){
+        return lastWincoin;
+    }
 
     public synchronized boolean vote(String username, int vote){
         if(vote < 0){
@@ -178,6 +185,7 @@ public class Post {
             } else{
                 downVotes.incrementAndGet();
             }
+            curator.add(username);
             return true;
         } else {
             return false;
@@ -188,6 +196,7 @@ public class Post {
         if(comment == null){
             throw new NullPointerException("null comment");
         }
+        curator.add(comment.getUsername());
         comments.add(comment);
     }
     @JsonIgnore

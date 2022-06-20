@@ -33,7 +33,12 @@ public class Utente {
         lastFeedWatch = System.currentTimeMillis() - MINUTES_TO_UPDATE_FEED * 30 * 1000;
         this.username = username;
         this.password = password;
-        this.tags = tags;
+        this.tags = new ArrayList<>();
+        for (String tag : tags) {
+            if(tag.length() < 20){
+                this.tags.add(tag.toLowerCase());
+            }
+        }
     }
     public Utente(){
     }
@@ -113,8 +118,6 @@ public class Utente {
     public boolean checkPassword(String password){
         return this.password.equals(password);
     }
-
-
     public boolean checkTag(ArrayList<String> tags) throws NullPointerException{
         if(tags == null){
             throw new NullPointerException("tags mancanti");

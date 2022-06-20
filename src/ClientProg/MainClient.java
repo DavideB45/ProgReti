@@ -25,8 +25,8 @@ public class MainClient {
                 switch (splitReq[0]){
                     case "register":
                         ArrayList<String> tags = new ArrayList<>();
-                        for (int i = 3; i < splitReq.length; i++) {
-                            tags.add(splitReq[i]);
+                        for (int i = 0; i < splitReq.length - 3 && i < 5; i++) {
+                            tags.add(splitReq[i + 3]);
                         }
                         answer = serverConn.register(splitReq[1], splitReq[2], tags);
                         break;

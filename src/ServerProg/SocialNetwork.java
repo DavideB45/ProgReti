@@ -62,7 +62,7 @@ public class SocialNetwork implements Enrollment {
                 e.printStackTrace();
             }
         }
-        WincoinCalculator winC = new WincoinCalculator(1000L *60*winCalcThreadSleepTime, this.posts, this.utenti, "238.255.1.3", 3000);
+        WincoinCalculator winC = new WincoinCalculator(1000L *60*winCalcThreadSleepTime, this.posts, this.utenti, "238.255.1.3", 3000, 0.7f);
         winCalcThread = new Thread(winC);
         winCalcThread.start();
     }
