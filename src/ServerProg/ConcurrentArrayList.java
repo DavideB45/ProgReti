@@ -44,4 +44,10 @@ public class ConcurrentArrayList<E>{
             return list.add(e);
         }
     }
+    public synchronized void clear(){
+        list.clear();
+    }
+    public synchronized void addAll(ArrayList<E> list){
+        this.list.addAll(list);
+    }
 }

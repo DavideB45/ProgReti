@@ -1,7 +1,11 @@
 package ServerProg;
 
 import ClientProg.*;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,15 +14,92 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SocialNetwork implements Enrollment {
     private final ConcurrentHashMap<String, Utente> utenti = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Integer, Post> posts = new ConcurrentHashMap<>();
-    private AtomicInteger idLast = new AtomicInteger(0);
-    private Thread winCalcThread;
+    private final AtomicInteger idLast = new AtomicInteger(0);
+    private final Thread winCalcThread;
+    private final String usersPath;
+    private final String postsPath;
 
-    public SocialNetwork(){
-        WincoinCalculator winC = new WincoinCalculator(1000*60*1, this.posts, this.utenti, "238.255.1.3", 3000);
+    public SocialNetwork(String relativePathUsers, String relativePathPosts, long winCalcThreadSleepTime) {
+        JsonFactory factory = new JsonFactory();
+        usersPath = relativePathUsers;
+        postsPath = relativePathPosts;
+        if(relativePathUsers != null) {
+            File file1 = new File(relativePathUsers);
+            try (JsonParser parser = factory.createParser(file1)) {
+                parser.setCodec(new ObjectMapper());
+                if (parser.nextToken() == JsonToken.START_ARRAY) {
+                    while (parser.nextToken() == JsonToken.START_OBJECT) {
+                        Utente u = parser.readValueAs(Utente.class);
+                        utenti.put(u.getUsername(), u);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if(relativePathPosts != null) {
+            File file2 = new File(relativePathPosts);
+            try {
+                if (file2.createNewFile()) {
+                    System.out.println("posts' file created");
+                }
+                try (JsonParser parser = factory.createParser(file2)) {
+                    parser.setCodec(new ObjectMapper());
+                    if (parser.nextToken() == JsonToken.START_ARRAY){
+                        parser.nextToken();
+                        parser.nextToken();
+                        idLast.set(parser.nextIntValue(0));
+                        parser.nextToken();
+                    }
+                    while (parser.nextToken() == JsonToken.START_OBJECT) {
+                        Post p = parser.readValueAs(Post.class);
+                        posts.put(p.getId(), p);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        WincoinCalculator winC = new WincoinCalculator(1000L *60*winCalcThreadSleepTime, this.posts, this.utenti, "238.255.1.3", 3000);
         winCalcThread = new Thread(winC);
         winCalcThread.start();
     }
-
+    public void saveState() {
+        winCalcThread.interrupt();
+        try {
+            winCalcThread.join(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        JsonFactory factory = new JsonFactory();
+        try (JsonGenerator generator = factory.createGenerator(new File(usersPath), JsonEncoding.UTF8)) {
+            generator.setCodec(new ObjectMapper());
+            generator.useDefaultPrettyPrinter();
+            generator.writeStartArray();
+            for (Utente u : utenti.values()) {
+                generator.writeObject(u);
+            }
+            generator.writeEndArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try (JsonGenerator generator = factory.createGenerator(new File(postsPath), JsonEncoding.UTF8)) {
+            generator.setCodec(new ObjectMapper());
+            generator.useDefaultPrettyPrinter();
+            generator.writeStartArray();
+            generator.writeStartObject();
+            generator.writeNumberField("idLast", idLast.get());
+            generator.writeEndObject();
+            for (Post p : posts.values()) {
+                generator.writeObject(p);
+            }
+            generator.writeEndArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public String randomMethod() throws RemoteException {
         float random = (float) Math.random();
@@ -28,10 +109,9 @@ public class SocialNetwork implements Enrollment {
 
     public boolean register(String username, String password, ArrayList<String> tags) throws RemoteException {
         if(username == null || password == null || tags == null){
-            throw new NullPointerException("campo mancante");
+            throw new NullPointerException("missing parameters");
         }
         Utente u = new Utente(username, password, tags);
-        System.out.println("Registrazione utente : " + username + "\npassword: " + password);
         return utenti.putIfAbsent(username, u) == null;
     }
     @Override
@@ -99,7 +179,7 @@ public class SocialNetwork implements Enrollment {
 
     public Utente login(String username, String password){
         if(username == null || password == null){
-            throw new NullPointerException("campo mancante");
+            throw new NullPointerException("missing field");
         }
         System.out.println("Login utente : " + username + "\npassword: " + password);
         if(!utenti.containsKey(username) || !utenti.get(username).checkPassword(password)){
@@ -109,7 +189,7 @@ public class SocialNetwork implements Enrollment {
     }
     public int logout(Utente user) {
         if (user == null) {
-            throw new NullPointerException("campo mancante");
+            throw new NullPointerException("missing field");
         }
         if (utenti.containsKey(user.getUsername())) {
             return 200;

@@ -3,21 +3,22 @@ package ServerProg;
 import ClientProg.FollowerCallback;
 import ClientProg.SimpleUtente;
 import ClientProg.SimpleWallet;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 public class Utente {
     private static final int MINUTES_TO_UPDATE_FEED = 60;
-    private final String username;
-    private final String password;
-    private final ArrayList<String> tags;
+    private String username;
+    private String password;
+    private ArrayList<String> tags;
     private final ConcurrentArrayList<String> followers = new ConcurrentArrayList<>();
     private final ConcurrentArrayList<String> following = new ConcurrentArrayList<>();
-    private final ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
+    private ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
     private final ArrayList<FollowerCallback> followersCallbacks = new ArrayList<>();
     private long lastFeedWatch;
-    private final Wallet wallet = new Wallet();
+    private Wallet wallet = new Wallet();
 
     public Utente(String username, String password, ArrayList<String> tags){
         if(username == null || password == null || tags == null){
@@ -34,16 +35,85 @@ public class Utente {
         this.password = password;
         this.tags = tags;
     }
+    public Utente(){
+    }
+
+    public void setUsername(String username){
+        if(username == null){
+            throw new NullPointerException("campo mancante");
+        }
+        if(username.length() < 3 || username.length() > 20){
+            throw new IllegalArgumentException("nome non valido");
+        }
+        this.username = username;
+    }
+    public void setPassword(String password){
+        if(password == null){
+            throw new NullPointerException();
+        }
+        this.password = password;
+    }
+    public void setTags(ArrayList<String> tags){
+        if(tags == null){
+            throw new NullPointerException();
+        }
+        this.tags = tags;
+    }
+    public void setFollowers(ArrayList<String> followers){
+        if(followers == null){
+            throw new NullPointerException();
+        }
+        this.followers.clear();
+        this.followers.addAll(followers);
+    }
+    public void setFollowing(ArrayList<String> following){
+        if(following == null){
+            throw new NullPointerException();
+        }
+        this.following.clear();
+        this.following.addAll(following);
+    }
+    public void setPosts(ArrayList<Integer> posts){
+        if(posts == null){
+            throw new NullPointerException();
+        }
+        this.posts.clear();
+        this.posts.addAll(posts);
+    }
+    public void setWallet(Wallet wallet){
+        if(wallet == null){
+            throw new NullPointerException();
+        }
+        this.wallet = wallet;
+    }
+
 
     public String getUsername(){
         return username;
     }
-    public boolean checkPassword(String password){
-        return this.password.equals(password);
+    public String getPassword(){
+        return password;
     }
     public ArrayList<String> getTags(){
         return tags;
     }
+    public ArrayList<String> getFollowers(){
+        return followers.getListCopy();
+    }
+    public ArrayList<String> getFollowing(){
+        return following.getListCopy();
+    }
+    public ArrayList<Integer> getPosts(){
+        return posts.getListCopy();
+    }
+    public SimpleWallet getWallet(){
+        return wallet.copy();
+    }
+
+    public boolean checkPassword(String password){
+        return this.password.equals(password);
+    }
+
 
     public boolean checkTag(ArrayList<String> tags) throws NullPointerException{
         if(tags == null){
@@ -61,14 +131,9 @@ public class Utente {
     public void addRecord(float wincoin, int postId, long timestamp){
         wallet.addRecord(wincoin, postId, timestamp);
     }
-    public ArrayList<WincoinRecord> getRecords(){
-        return wallet.getWincoinRecords();
-    }
+
 
     // return a copy of all followers
-    public ArrayList<String> getFollowers(){
-        return followers.getListCopy();
-    }
     public synchronized boolean addCallback(FollowerCallback callback){
         if (callback == null){
             return false;
@@ -126,10 +191,6 @@ public class Utente {
         return following.contains(username);
     }
 
-    // return a copy of all following
-    public ArrayList<String> getFollowing(){
-        return following.getListCopy();
-    }
     // this starts to follow utente
     public boolean follow(Utente utente){
         if(utente == null){
@@ -170,10 +231,6 @@ public class Utente {
     public boolean removePost(int post){
         return posts.removeElement(post);
     }
-    // return a copy of all posts ids
-    public ArrayList<Integer> getPosts(){
-        return posts.getListCopy();
-    }
     // return the last time the user watched the feed and eventually update it
     public long getLastFeedWatch(){
         long last = lastFeedWatch;
@@ -185,10 +242,7 @@ public class Utente {
         return last;
     }
 
-    // return a copy of the user's wallet
-    public SimpleWallet getWallet(){
-        return wallet.copy();
-    }
+    @JsonIgnore
     public float getWincoin(){
         return wallet.getBalance();
     }

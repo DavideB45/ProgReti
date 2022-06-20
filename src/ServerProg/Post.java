@@ -1,22 +1,24 @@
 package ServerProg;
 
 import ClientProg.PostHead;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Post {
-    private final int id;
-    private final String creator;
-    private final String title;
-    private final String text;
+    private int id;
+    private String creator;
+    private String title;
+    private String text;
     private long date;
 
-    private final HashMap<String, Integer> votes = new HashMap<>();
-    private AtomicInteger upVotes = new AtomicInteger(0);
-    private AtomicInteger downVotes = new AtomicInteger(0);
+    private HashMap<String, Integer> votes = new HashMap<>();
+    private final AtomicInteger upVotes = new AtomicInteger(0);
+    private final AtomicInteger downVotes = new AtomicInteger(0);
 
     int iterationNumber = 0;
     int oldUpVotes = 0;
@@ -41,6 +43,7 @@ public class Post {
         this.text = text;
         this.date = System.currentTimeMillis();
     }
+    public Post(){}
 
     public float calculateWincoin() {
         iterationNumber++;
@@ -75,18 +78,83 @@ public class Post {
     public int getId() {
         return id;
     }
+    public void setId(int id) {
+        this.id = id;
+    }
     public String getCreator() {
         return creator;
+    }
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
     public String getTitle() {
         return title;
     }
+    public void setTitle(String title) {
+        this.title = title;
+    }
     public String getText() {
         return text;
+    }
+    public void setText(String text) {
+        this.text = text;
     }
     public long getDate() {
         return date;
     }
+    public void setDate(long date) {
+        this.date = date;
+    }
+    public HashMap<String, Integer> getVotes() {
+        return votes;
+    }
+    public void setVotes(HashMap<String, Integer> votes) {
+        this.votes = votes;
+    }
+    public synchronized int getUpVotes() {
+        return upVotes.get();
+    }
+    public synchronized void setUpVotes(int upVotes) {
+        this.upVotes.set(upVotes);
+    }
+    public synchronized int getDownVotes() {
+        return downVotes.get();
+    }
+    public synchronized void setDownVotes(int downVotes) {
+        this.downVotes.set(downVotes);
+    }
+    public int getIterationNumber() {
+        return iterationNumber;
+    }
+    public void setIterationNumber(int iterationNumber) {
+        this.iterationNumber = iterationNumber;
+    }
+    public int getOldUpVotes() {
+        return oldUpVotes;
+    }
+    public void setOldUpVotes(int oldUpVotes) {
+        this.oldUpVotes = oldUpVotes;
+    }
+    public int getOldDownVotes() {
+        return oldDownVotes;
+    }
+    public void setOldDownVotes(int oldDownVotes) {
+        this.oldDownVotes = oldDownVotes;
+    }
+    public ArrayList<String> getOldComment() {
+        return new ArrayList<>(oldComment);
+    }
+    public void setOldComment(ArrayList<String> oldComment) {
+        this.oldComment = new HashSet<>(oldComment);
+    }
+    public ArrayList<Comment> getComments() {
+        return comments.getListCopy();
+    }
+    public void setComments(ArrayList<Comment> comments) {
+        this.comments.addAll(comments);
+    }
+
+    @JsonIgnore
     public PostHead getHead(){
         return new PostHead(id, creator, title);
     }
@@ -97,12 +165,7 @@ public class Post {
         this.date = System.currentTimeMillis();
     }
 
-    public synchronized int getUpVotes() {
-        return upVotes.get();
-    }
-    public synchronized int getDownVotes() {
-        return downVotes.get();
-    }
+
     public synchronized boolean vote(String username, int vote){
         if(vote < 0){
             vote = -1;
@@ -127,6 +190,7 @@ public class Post {
         }
         comments.add(comment);
     }
+    @JsonIgnore
     public Comment getComment(int i) {
         try {
             return comments.get(i);
@@ -134,6 +198,7 @@ public class Post {
             return null;
         }
     }
+    @JsonIgnore
     public int getCommentCount() {
         return comments.size();
     }

@@ -5,11 +5,11 @@ import java.net.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WincoinCalculator implements Runnable {
-    long iterationsInterleave;
-    ConcurrentHashMap<Integer, Post> posts;
-    ConcurrentHashMap<String, Utente> utenti;
-    InetAddress multicastAddress;
-    int multicastPort;
+    private final long iterationsInterleave;
+    private final ConcurrentHashMap<Integer, Post> posts;
+    private final ConcurrentHashMap<String, Utente> utenti;
+    private InetAddress multicastAddress;
+    private final int multicastPort;
 
     public WincoinCalculator(long iterationsInterleave, ConcurrentHashMap<Integer, Post> posts, ConcurrentHashMap<String, Utente> utenti, String multicastAddress, int multicastPort) {
         this.iterationsInterleave = iterationsInterleave;
@@ -36,12 +36,10 @@ public class WincoinCalculator implements Runnable {
             try {
                 Thread.sleep(iterationsInterleave - (System.currentTimeMillis() - lastIteration));
             } catch (InterruptedException e) {
-                if (Thread.currentThread().isInterrupted()) {
-                    return;
-                } else if (lastIteration + iterationsInterleave < System.currentTimeMillis()) {
-                    System.out.println("WARNING: WincoinCalculator thread was interrupted but it was not because of a timeout");
-                    continue;
+                if (socket != null) {
+                    socket.close();
                 }
+                break;
             }
             for (Post post : posts.values()) {
                 float wincoin = post.calculateWincoin();
