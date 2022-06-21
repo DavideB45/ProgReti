@@ -136,29 +136,25 @@ public class ServerConnection {
             return status + ": wrong password or user not registered";
         }
     }
-    public String logout(String username) throws IOException {
+    public String logout() throws IOException {
         if(!logged){
             return "Not logged in";
         }
-        if(username.equals(this.username)){
-            String statusRegister = unregisterForFollower();
-            writeRequest(new String[]{"03","\n"});
-            String status = iStr.readLine();
-            iStr.readLine();
-            int code = Integer.decode(status);
-            if(code == 200){
-                this.logged = false;
-                this.username = null;
-                this.password = null;
-                multicastThread.interrupt();
-                return "log out completed | " + statusRegister;
-            } else if(code == 401){
-                return "unrecognised user";
-            } else {
-                return status + ": unable to log out";
-            }
+        String statusRegister = unregisterForFollower();
+        writeRequest(new String[]{"03","\n"});
+        String status = iStr.readLine();
+        iStr.readLine();
+        int code = Integer.decode(status);
+        if(code == 200){
+            this.logged = false;
+            this.username = null;
+            this.password = null;
+            multicastThread.interrupt();
+            return "log out completed | " + statusRegister;
+        } else if(code == 401){
+            return "unrecognised user";
         } else {
-            return "wrong/missing username";
+            return status + ": unable to log out";
         }
     }
 

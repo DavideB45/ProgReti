@@ -235,7 +235,7 @@ public class Utente {
         return posts.removeElement(post);
     }
     // return the last time the user watched the feed and eventually update it
-    public long getLastFeedWatch(){
+    public synchronized long getLastFeedWatch(){
         long last = lastFeedWatch;
         if(lastFeedWatch == 0){
             lastFeedWatch = System.currentTimeMillis();
@@ -243,6 +243,9 @@ public class Utente {
             lastFeedWatch = System.currentTimeMillis();
         }
         return last;
+    }
+    public synchronized void setLastFeedWatch(long last){
+        lastFeedWatch = last;
     }
 
     @JsonIgnore

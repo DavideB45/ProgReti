@@ -9,9 +9,10 @@ import java.util.ArrayList;
 public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
-        int portTCP = 3030;
+        int portTCP = 3031;
+        String host = "localhost";
         try {
-            serverConn = new ServerConnection(InetAddress.getLocalHost(), portTCP);
+            serverConn = new ServerConnection(InetAddress.getByName(host), portTCP);
         } catch (IOException | NotBoundException e) {
             System.out.println("Impossibile connettersi al server");
             System.out.println("porta :" + portTCP);
@@ -37,7 +38,7 @@ public class MainClient {
                         answer = serverConn.login(splitReq[1], splitReq[2]);
                         break;
                     case "logout":
-                        answer = serverConn.logout(splitReq[1]);
+                        answer = serverConn.logout();
                         break;
                     case "follow":
                         answer = serverConn.follow(splitReq[1]);
@@ -107,7 +108,6 @@ public class MainClient {
                 System.out.println(answer);
             } catch (SocketException e) {
                 System.out.println("Connessione con server persa");
-                continue;
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ArrayIndexOutOfBoundsException e){

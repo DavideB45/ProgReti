@@ -13,11 +13,7 @@ public class ConcurrentArrayList<E>{
     }
 
     public synchronized ArrayList<E> getListCopy(){
-        ArrayList<E> copy = new ArrayList<>();
-        for(E e : list){
-            copy.add(e);
-        }
-        return copy;
+        return new ArrayList<>(list);
     }
     public synchronized void add(E e){
         list.add(e);

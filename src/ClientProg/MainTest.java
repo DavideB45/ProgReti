@@ -9,7 +9,7 @@ public class MainTest {
     public static void main(String[] args) throws IOException {
         ServerConnection serverConn;
         try {
-            serverConn = new ServerConnection(InetAddress.getLocalHost(), 8080);
+            serverConn = new ServerConnection(InetAddress.getLocalHost(), 3031);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (NotBoundException e) {
@@ -23,7 +23,7 @@ public class MainTest {
         serverConn.register("username", "password", tags);
         serverConn.login("username", "password");
         serverConn.post("TITOLO", "CONTENUTO");
-        serverConn.logout("username");
+        serverConn.logout();
 
         tags.clear();
         tags.add("Pesticidi");
@@ -36,14 +36,14 @@ public class MainTest {
         serverConn.login("Luisa", "psw");
         serverConn.post("FORMICHE", "creature magnifiche le formiche");
         serverConn.follow("username");
-        serverConn.logout("Luisa");
+        serverConn.logout();
 
         serverConn.login("username", "password");
         System.out.println(serverConn.follow("Luisa"));
         System.out.println(serverConn.rate("2", "5"));
         serverConn.comment("2", "melglio non infastidirle");
         System.out.println(serverConn.showPost("2"));
-        serverConn.logout("username");
+        serverConn.logout();
 
         tags.clear();
         tags.add("bicycle");

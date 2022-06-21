@@ -3,9 +3,10 @@ package ClientProg;
 import javax.swing.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class FollowerList implements FollowerCallback {
-    private final ArrayList<SimpleUtente> followers = new ArrayList<>();
+    private final HashSet<SimpleUtente> followers = new HashSet<>();
     FollowerList(){}
 
     @Override

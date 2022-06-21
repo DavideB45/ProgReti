@@ -86,5 +86,8 @@ public class WincoinCalculator implements Runnable {
                 }
             }
         }
+        if (socket != null) {
+            socket.close();
+        }
     }
 }

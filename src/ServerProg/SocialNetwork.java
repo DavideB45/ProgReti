@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -116,12 +115,12 @@ public class SocialNetwork implements Enrollment {
     public int getMulticastPort() {
         return multicastPort;
     }
+
     public String randomMethod() throws RemoteException {
         float random = (float) Math.random();
         System.out.println("random: " + random);
         return "random" + random;
     }
-
     public boolean register(String username, String password, ArrayList<String> tags) throws RemoteException {
         if(username == null || password == null || tags == null){
             throw new NullPointerException("missing parameters");
@@ -173,6 +172,7 @@ public class SocialNetwork implements Enrollment {
             return 500;
         }
     }
+
     private boolean hasPostInFeed(String username, int id){
         Utente u = utenti.get(username);
         if(u == null){
@@ -191,12 +191,12 @@ public class SocialNetwork implements Enrollment {
         }
         return false;
     }
-
     public Utente login(String username, String password){
         if(username == null || password == null){
             throw new NullPointerException("missing field");
         }
         System.out.println("Login utente : " + username + "\npassword: " + password);
+        //controlli fatti separatamente perchè l'utente non può essere rimosso
         if(!utenti.containsKey(username) || !utenti.get(username).checkPassword(password)){
             return null;
         }
@@ -402,8 +402,6 @@ public class SocialNetwork implements Enrollment {
             Post p = posts.get(id);
             if(p != null && p.postedAfter(lastWatch)){
                 postHeads.add(p.getHead());
-            } else if (p == null) {
-                user.removePost(id);
             }
         }
         return postHeads;

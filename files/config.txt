@@ -4,17 +4,17 @@ POST_BACKUP_FILE_NAME = files/posts.json
 USER_BACKUP_FILE_NAME = files/users.json
 
 #TCP server port
-TCP_SERVER_PORT = 3030
+TCP_SERVER_PORT = 3031
 
 #multicast group
 MULTICAST_GROUP = 238.255.1.3
 #multicast port
-MULTICAST_PORT = 4040
+MULTICAST_PORT = 3032
 
 #registry location
 REGISTRY_LOCATION = localhost
 #registry port
-REGISTRY_PORT = 5050
+REGISTRY_PORT = 3033
 
 #configurazione thread worker
 MIN_WORKER_THREADS = 1
