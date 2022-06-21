@@ -20,8 +20,10 @@ public class SocialNetwork implements Enrollment {
     private final Thread winCalcThread;
     private final String usersPath;
     private final String postsPath;
+    private final String multicastGroup;
+    private final int multicastPort;
 
-    public SocialNetwork(String relativePathUsers, String relativePathPosts, long winCalcThreadSleepTime) {
+    public SocialNetwork(String relativePathUsers, String relativePathPosts, long winCalcThreadSleepTime, String multicastAddress, int multicastPort, float creatorPercentage) {
         JsonFactory factory = new JsonFactory();
         usersPath = relativePathUsers;
         postsPath = relativePathPosts;
@@ -64,7 +66,12 @@ public class SocialNetwork implements Enrollment {
                 e.printStackTrace();
             }
         }
-        WincoinCalculator winC = new WincoinCalculator(1000L *60*winCalcThreadSleepTime, this.posts, this.utenti, "238.255.1.3", 3000, 0.7f);
+        this.multicastGroup = multicastAddress;
+        this.multicastPort = multicastPort;
+        WincoinCalculator winC = new WincoinCalculator(1000L *60*winCalcThreadSleepTime,
+                this.posts, this.utenti,
+                multicastAddress, multicastPort,
+                creatorPercentage);
         winCalcThread = new Thread(winC);
         winCalcThread.start();
     }
@@ -103,6 +110,12 @@ public class SocialNetwork implements Enrollment {
         }
     }
 
+    public String getMulticastGroup() {
+        return multicastGroup;
+    }
+    public int getMulticastPort() {
+        return multicastPort;
+    }
     public String randomMethod() throws RemoteException {
         float random = (float) Math.random();
         System.out.println("random: " + random);

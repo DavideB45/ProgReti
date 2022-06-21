@@ -31,18 +31,24 @@ public class ServerConnection {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public ServerConnection(InetAddress host, int port) throws IOException, NotBoundException {
+    public ServerConnection(InetAddress host, int portTCP) throws IOException, NotBoundException {
         this.host = host;
-        this.port = port;
+        this.port = portTCP;
         connectionSocket = new Socket(host, port);
         oStr = connectionSocket.getOutputStream();
         iStr = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
         System.out.println("Connected to " + host.getHostName() + port );
 
-        Registry registry = LocateRegistry.getRegistry("localhost", 8081);
-        stubSN = (ServerProg.Enrollment) registry.lookup("WINSOME");
-        callback = (FollowerCallback) UnicastRemoteObject.exportObject(followers, 0);
-
+        writeRequest(new String[]{"00", "\n"});
+        iStr.readLine();
+        String hostname = iStr.readLine();
+        int rmiPort = Integer.parseInt(iStr.readLine());
+        iStr.readLine();
+        if(rmiPort != -1) {
+            Registry registry = LocateRegistry.getRegistry(hostname, rmiPort);
+            stubSN = (ServerProg.Enrollment) registry.lookup("WINSOME");
+            callback = (FollowerCallback) UnicastRemoteObject.exportObject(followers, 0);
+        }
     }
     public boolean reconnect(){
         try {

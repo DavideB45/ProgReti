@@ -27,7 +27,7 @@ public class Utente {
         if(username.length() < 3 || username.length() > 20){
             throw new IllegalArgumentException("nome non valido");
         }
-        if(password.length() > 20){
+        if(password.length() > 20 || password.length() < 1){
             throw new IllegalArgumentException("password troppo lunga");
         }
         lastFeedWatch = System.currentTimeMillis() - MINUTES_TO_UPDATE_FEED * 30 * 1000;

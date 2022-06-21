@@ -8,7 +8,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -22,18 +21,30 @@ public class MainServer {
         Selector selector;
         WncBtcCalculator exchanger = new WncBtcCalculator();
         Registry registry;
-        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(1, 10, 10,
+
+        File configFile;
+        if(args.length == 0) {
+            configFile = new File("config.txt");
+        } else {
+            configFile = new File(args[0]);
+        }
+        int registryPort = Integer.parseInt(getFromConfig(configFile, "REGISTRY_PORT", "8081"));
+        String registryHost = getFromConfig(configFile, "REGISTRY_LOCATION", "localhost");
+        int minThreads = Integer.parseInt(getFromConfig(configFile, "MIN_WORKER_THREADS", "1"));
+        int maxThreads = Integer.parseInt(getFromConfig(configFile, "MAX_WORKER_THREADS", "10"));
+        ThreadPoolExecutor workerPool = new ThreadPoolExecutor(minThreads, maxThreads, 10,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(15));
         try {
-            sn = new SocialNetwork("users.json", "posts.json", 1);
+            sn = snFromFile(configFile);
             serverSocket = ServerSocketChannel.open();
-            serverSocket.socket().bind(new InetSocketAddress(8080));
+            int port = Integer.parseInt(getFromConfig(configFile, "TCP_SERVER_PORT", "8080"));
+            serverSocket.socket().bind(new InetSocketAddress(port));
             serverSocket.configureBlocking(false);
-            System.out.println(InetAddress.getLocalHost().getHostAddress() + ":8080");
+            System.out.println(InetAddress.getLocalHost().getHostAddress() + ":" + port);
             selector = Selector.open();
             serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
-            registry = activateRMI(8081, sn);
+            registry = activateRMI(registryHost, registryPort, sn);
             if (registry == null)
                 return;
         } catch (IOException e) {
@@ -64,7 +75,7 @@ public class MainServer {
                     } else if(key.isWritable() || key.isReadable()) {
                         // add thread to handle request
                         key.interestOps(0);
-                        ClientRequestRunnable task = new ClientRequestRunnable((ConnectedUser) key.attachment(), selector, exchanger, sn);
+                        ClientRequestRunnable task = new ClientRequestRunnable((ConnectedUser) key.attachment(), selector, exchanger, sn, registryHost, registryPort);
                         try{
                             workerPool.execute(task);
                         } catch (RejectedExecutionException e){
@@ -115,21 +126,13 @@ public class MainServer {
             e.printStackTrace();
         }
 
-        /*Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-        for (Thread x : threadSet) {
-            //System.out.println(x.getName());
-            if(x.getName().contains("RMI")){
-                //x.interrupt();
-                System.out.println("Interrupted " + x.getName());
-            }
-        }*/
     }
 
-    private static Registry activateRMI(int port, SocialNetwork sn) {
+    private static Registry activateRMI(String host, int port, SocialNetwork sn) {
         try {
             Enrollment stub = (Enrollment) UnicastRemoteObject.exportObject(sn, 0);
             LocateRegistry.createRegistry(port);
-            Registry registry = LocateRegistry.getRegistry(port);
+            Registry registry = LocateRegistry.getRegistry(host,port);
             registry.rebind("WINSOME", stub);
             System.out.println("RMI activated");
             return registry;
@@ -138,5 +141,76 @@ public class MainServer {
             System.out.println("RMI not activated");
             return null;
         }
+    }
+
+    private static SocialNetwork snFromFile(File config) {
+        String uPath = "users.json";
+        String pPath = "posts.json";
+        int sleepTime = 60;
+        String multicastAddress = "238.255.1.3";
+        int multicastPort = 8888;
+        float cPercentage = 0.7f;
+        if (config.canRead()){
+            try {
+                System.out.println("Reading config file " + config.getAbsolutePath());
+                BufferedReader br = new BufferedReader(new FileReader(config));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.replaceAll(" ","").split("=");
+                    if (parts[0].equals("USER_BACKUP_FILE_NAME")) {
+                        uPath = parts[1];
+                        //System.out.println("users " + parts[1]);
+                    } else if (parts[0].equals("POST_BACKUP_FILE_NAME")) {
+                        pPath = parts[1];
+                        //System.out.println("posts " + parts[1]);
+                    } else if (parts[0].equals("TIME_TO_CALCULATE_REWARDS")) {
+                        sleepTime = Integer.parseInt(parts[1]);
+                        //System.out.println("sleepTime " + parts[1]);
+                    } else if (parts[0].equals("MULTICAST_GROUP")) {
+                        multicastAddress = parts[1];
+                        //System.out.println("multicastAddress " + parts[1]);
+                    } else if (parts[0].equals("MULTICAST_PORT")) {
+                        multicastPort = Integer.parseInt(parts[1]);
+                        //System.out.println("multicastPort " + parts[1]);
+                    } else if (parts[0].equals("CREATOR_REWARD_PERCENTAGE")) {
+                        cPercentage = Float.parseFloat(parts[1]);
+                        //System.out.println("cPercentage " + parts[1]);
+                    }
+                }
+                br.close();
+            } catch (IOException e) {
+                System.out.println("Using default config");
+            }
+        } else {
+            System.out.println("Using default config");
+        }
+
+        return new SocialNetwork(uPath, pPath, sleepTime, multicastAddress, multicastPort, cPercentage);
+    }
+
+    private static String getFromConfig(File config, String key, String defaultValue){
+        String value = "";
+        if (config.canRead()){
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(config));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.replaceAll(" ","").split("=");
+                    if (parts[0].equals(key)) {
+                        value = parts[1];
+                        break;
+                    }
+                }
+                br.close();
+            } catch (IOException e) {
+                System.out.println("Using default config");
+            }
+        } else {
+            System.out.println("Using default config");
+        }
+        if (value.isEmpty()) {
+            return defaultValue;
+        }
+        return value;
     }
 }

@@ -1,0 +1,26 @@
+#nome del file di backup per i post
+POST_BACKUP_FILE_NAME = files/posts.json
+#nome del file di backup per gli utenti
+USER_BACKUP_FILE_NAME = files/users.json
+
+#TCP server port
+TCP_SERVER_PORT = 3030
+
+#multicast group
+MULTICAST_GROUP = 238.255.1.3
+#multicast port
+MULTICAST_PORT = 4040
+
+#registry location
+REGISTRY_LOCATION = localhost
+#registry port
+REGISTRY_PORT = 5050
+
+#configurazione thread worker
+MIN_WORKER_THREADS = 1
+MAX_WORKER_THREADS = 10
+
+#tempo calcolo ricompense in minuti
+TIME_TO_CALCULATE_REWARDS = 2
+#percentuale ricompensa creatore (tra 0.5 e 1)
+CREATOR_REWARD_PERCENTAGE = 0.75

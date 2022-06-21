@@ -9,10 +9,12 @@ import java.util.ArrayList;
 public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
+        int portTCP = 3030;
         try {
-            serverConn = new ServerConnection(InetAddress.getLocalHost(), 8080);
+            serverConn = new ServerConnection(InetAddress.getLocalHost(), portTCP);
         } catch (IOException | NotBoundException e) {
             System.out.println("Impossibile connettersi al server");
+            System.out.println("porta :" + portTCP);
             return;
         }
 

@@ -18,12 +18,16 @@ public class ClientRequestRunnable implements Runnable{
     private final Selector selector;
     private final WncBtcCalculator exchanger;
     private final SocialNetwork sn;
+    private final int portRMI;
+    private final String hostRMI;
 
-    public ClientRequestRunnable(ConnectedUser user, Selector sel, WncBtcCalculator exchanger, SocialNetwork sn){
+    public ClientRequestRunnable(ConnectedUser user, Selector sel, WncBtcCalculator exchanger, SocialNetwork sn, String hostRMI, int portRMI) {
         this.selector = sel;
         u = user;
         this.exchanger = exchanger;
         this.sn = sn;
+        this.hostRMI = hostRMI;
+        this.portRMI = portRMI;
     }
 
     @Override
@@ -66,13 +70,17 @@ public class ClientRequestRunnable implements Runnable{
             Utente user = u.getIdentity();
             ObjectMapper mapper = new ObjectMapper();
             switch (operation){
+                case 0:
+                    // get user info
+                    u.setResponse(200, new String[]{hostRMI, String.valueOf(portRMI)});
+                    break;
                 case 2:
                     Utente verifiedUser = sn.login(args[0], args[1]);
                     u.setIdentity(verifiedUser);
                     if (verifiedUser == null) {
                         u.setResponse(404, null);
                     } else {
-                        u.setResponse(200, new String[]{"238.255.1.3", "3000"});
+                        u.setResponse(200, new String[]{sn.getMulticastGroup(), String.valueOf(sn.getMulticastPort())});
                     }
                     break;
                 case 3:
