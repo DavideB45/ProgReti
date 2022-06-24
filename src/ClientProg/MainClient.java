@@ -10,7 +10,11 @@ public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
         int portTCP = 8080;
+<<<<<<< Updated upstream
         String host = "192.168.56.1";
+=======
+        String host = "localhost";
+>>>>>>> Stashed changes
         try {
             serverConn = new ServerConnection(InetAddress.getByName(host), portTCP);
         } catch (IOException | NotBoundException e) {
@@ -51,19 +55,35 @@ public class MainClient {
                         answer = serverConn.post(post[1], post[3]);
                         break;
                     case "show":
-                        answer = switch (splitReq[1]) {
-                            case "post" -> serverConn.showPost(splitReq[2]);
-                            case "feed" -> serverConn.showFeed();
-                            case "blog" -> "scrivi solo blog";
-                            default -> "operazione non riconosciuta";
+                        switch (splitReq[1]) {
+                            case "post":
+                                answer = serverConn.showPost(splitReq[2]);
+                                break;
+                            case "feed":
+                                answer = serverConn.showFeed();
+                                break;
+                            case "blog":
+                                answer = "scrivi solo blog";
+                                break;
+                            default:
+                                answer = "operazione non riconosciuta";
+                                break;
                         };
                         break;
                     case "list":
-                        answer = switch (splitReq[1]) {
-                            case "following" -> serverConn.listFollowing();
-                            case "followers" -> serverConn.listFollowers();
-                            case "users" -> serverConn.listUsers();
-                            default -> "operazione non riconosciuta";
+                        switch (splitReq[1]) {
+                            case "following":
+                                answer = serverConn.listFollowing();
+                                break;
+                            case "followers":
+                                answer = serverConn.listFollowers();
+                                break;
+                            case "users":
+                                answer = serverConn.listUsers();
+                                break;
+                            default:
+                                answer = "operazione non riconosciuta";
+                                break;
                         };
                         break;
                     case "blog":
