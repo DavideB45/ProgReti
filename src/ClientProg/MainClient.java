@@ -9,8 +9,8 @@ import java.util.ArrayList;
 public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
-        int portTCP = 3031;
-        String host = "localhost";
+        int portTCP = 8080;
+        String host = "192.168.56.1";
         try {
             serverConn = new ServerConnection(InetAddress.getByName(host), portTCP);
         } catch (IOException | NotBoundException e) {

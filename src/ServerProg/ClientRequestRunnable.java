@@ -53,6 +53,9 @@ public class ClientRequestRunnable implements Runnable{
                     // response is fully sent
                     u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
+                } else {
+                    u.getKey().interestOps(SelectionKey.OP_WRITE);
+                    selector.wakeup();
                 }
             }
         } catch (Exception e) {

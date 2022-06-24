@@ -15,9 +15,10 @@ public class Utente {
     private ArrayList<String> tags;
     private final ConcurrentArrayList<String> followers = new ConcurrentArrayList<>();
     private final ConcurrentArrayList<String> following = new ConcurrentArrayList<>();
-    private ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
+    private final ConcurrentArrayList<Integer> posts = new ConcurrentArrayList<>();
     private final ArrayList<FollowerCallback> followersCallbacks = new ArrayList<>();
     private long lastFeedWatch;
+    private final Object lockTime = new Object();
     private Wallet wallet = new Wallet();
 
     public Utente(String username, String password, ArrayList<String> tags){
@@ -196,26 +197,30 @@ public class Utente {
 
     // this starts to follow utente
     public boolean follow(Utente utente){
-        if(utente == null){
-            throw new NullPointerException("utente mancante");
+        synchronized (following) {
+            if (utente == null) {
+                throw new NullPointerException("utente mancante");
+            }
+            if (utente.getUsername().equals(this.username)) {
+                return false;
+            }
+            following.addIfAbsent(utente.getUsername());
+            utente.addFollower(this);
+            return true;
         }
-        if(utente.getUsername().equals(this.username)){
-            return false;
-        }
-        following.addIfAbsent(utente.getUsername());
-        utente.addFollower(this);
-        return true;
     }
     // this stops to follow utente
     public void unfollow(Utente utente){
-        if(utente == null){
-            throw new NullPointerException("utente mancante");
+        synchronized (following) {
+            if (utente == null) {
+                throw new NullPointerException("utente mancante");
+            }
+            if (utente.getUsername().equals(this.username)) {
+                return;
+            }
+            following.removeElement(utente.getUsername());
+            utente.removeFollower(this);
         }
-        if(utente.getUsername().equals(this.username)){
-            return;
-        }
-        following.removeElement(utente.getUsername());
-        utente.removeFollower(this);
     }
 
     // add a post to the user's posts
@@ -235,17 +240,21 @@ public class Utente {
         return posts.removeElement(post);
     }
     // return the last time the user watched the feed and eventually update it
-    public synchronized long getLastFeedWatch(){
-        long last = lastFeedWatch;
-        if(lastFeedWatch == 0){
-            lastFeedWatch = System.currentTimeMillis();
-        } else if(System.currentTimeMillis() - lastFeedWatch > 1000*60*MINUTES_TO_UPDATE_FEED){
-            lastFeedWatch = System.currentTimeMillis();
+    public long getLastFeedWatch(){
+        synchronized (lockTime) {
+            long last = lastFeedWatch;
+            if (lastFeedWatch == 0) {
+                lastFeedWatch = System.currentTimeMillis();
+            } else if (System.currentTimeMillis() - lastFeedWatch > 1000 * 60 * MINUTES_TO_UPDATE_FEED) {
+                lastFeedWatch = System.currentTimeMillis();
+            }
+            return last;
         }
-        return last;
     }
-    public synchronized void setLastFeedWatch(long last){
-        lastFeedWatch = last;
+    public void setLastFeedWatch(long last){
+        synchronized (lockTime) {
+            lastFeedWatch = last;
+        }
     }
 
     @JsonIgnore

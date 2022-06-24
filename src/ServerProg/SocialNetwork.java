@@ -28,13 +28,20 @@ public class SocialNetwork implements Enrollment {
         postsPath = relativePathPosts;
         if(relativePathUsers != null) {
             File file1 = new File(relativePathUsers);
-            try (JsonParser parser = factory.createParser(file1)) {
-                parser.setCodec(new ObjectMapper());
-                if (parser.nextToken() == JsonToken.START_ARRAY) {
-                    while (parser.nextToken() == JsonToken.START_OBJECT) {
-                        Utente u = parser.readValueAs(Utente.class);
-                        utenti.put(u.getUsername(), u);
+            try {
+                if (file1.createNewFile()) {
+                    System.out.println("file creato");
+                }
+                try (JsonParser parser = factory.createParser(file1)) {
+                    parser.setCodec(new ObjectMapper());
+                    if (parser.nextToken() == JsonToken.START_ARRAY) {
+                        while (parser.nextToken() == JsonToken.START_OBJECT) {
+                            Utente u = parser.readValueAs(Utente.class);
+                            utenti.put(u.getUsername(), u);
+                        }
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -3,6 +3,7 @@ package ClientProg;
 import javax.swing.*;
 import java.io.IOException;
 import java.net.*;
+import java.util.Enumeration;
 
 public class NotificationReceiver implements Runnable{
     MulticastSocket socket;
@@ -10,7 +11,9 @@ public class NotificationReceiver implements Runnable{
 
     public NotificationReceiver(InetAddress multicastAddress, int multicastPort) throws IOException {
         socket = new MulticastSocket(multicastPort);
-        socket.joinGroup(multicastAddress);
+        NetworkInterface networkInterface = NetworkInterface.getByName("en0");
+        socket.joinGroup(new InetSocketAddress(multicastAddress, multicastPort), networkInterface);
+        //socket.joinGroup(multicastAddress);
     }
 
     @Override
