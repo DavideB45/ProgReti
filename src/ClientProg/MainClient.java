@@ -10,11 +10,7 @@ public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
         int portTCP = 8080;
-<<<<<<< Updated upstream
         String host = "192.168.56.1";
-=======
-        String host = "localhost";
->>>>>>> Stashed changes
         try {
             serverConn = new ServerConnection(InetAddress.getByName(host), portTCP);
         } catch (IOException | NotBoundException e) {
