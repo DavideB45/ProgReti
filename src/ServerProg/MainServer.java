@@ -29,7 +29,16 @@ public class MainServer {
             configFile = new File(args[0]);
         }
         int registryPort = Integer.parseInt(getFromConfig(configFile, "REGISTRY_PORT", "8081"));
-        String registryHost = getFromConfig(configFile, "REGISTRY_LOCATION", "localhost");
+        String registryHost = null;
+        try {
+            registryHost = getFromConfig(configFile, "REGISTRY_LOCATION", "localhost");
+            if(registryHost.equals("localhost")) {
+                registryHost = InetAddress.getLocalHost().getHostAddress();
+            }
+            System.out.println("Registry host: " + registryHost);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
         int minThreads = Integer.parseInt(getFromConfig(configFile, "MIN_WORKER_THREADS", "1"));
         int maxThreads = Integer.parseInt(getFromConfig(configFile, "MAX_WORKER_THREADS", "10"));
         ThreadPoolExecutor workerPool = new ThreadPoolExecutor(minThreads, maxThreads, 10,
