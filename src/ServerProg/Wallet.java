@@ -12,6 +12,13 @@ public class Wallet {
     public Wallet() {
         wincoinRecords = new ConcurrentArrayList<>();
     }
+
+    /**
+     * add a record to the wallet
+     * @param wincoin amount of WNC earned
+     * @param postId post that generated the revenue
+     * @param timestamp time when WNC were earned
+     */
     public synchronized void addRecord(float wincoin, int postId, long timestamp) {
         wincoinRecords.add(new WincoinRecord(wincoin, postId, timestamp));
         balance += wincoin;
@@ -29,6 +36,10 @@ public class Wallet {
     public synchronized void setWincoinRecords(ArrayList<WincoinRecord> wincoinRecords) {
         this.wincoinRecords = new ConcurrentArrayList<>(wincoinRecords);
     }
+
+    /**
+     * @return a non thread safe copy of this wallet
+     */
     public synchronized SimpleWallet copy() {
         SimpleWallet copy = new SimpleWallet();
         copy.setBalance(balance);

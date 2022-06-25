@@ -22,6 +22,11 @@ public class SocialNetwork implements Enrollment {
     private final String multicastGroup;
     private final int multicastPort;
 
+    /**
+     * create the object with given parameter
+     * and populate it with info from relativePaths
+     * those files are also used by saveState()
+     */
     public SocialNetwork(String relativePathUsers, String relativePathPosts, long winCalcThreadSleepTime, String multicastAddress, int multicastPort, float creatorPercentage) {
         JsonFactory factory = new JsonFactory();
         usersPath = relativePathUsers;
@@ -81,6 +86,10 @@ public class SocialNetwork implements Enrollment {
         winCalcThread = new Thread(winC);
         winCalcThread.start();
     }
+
+    /**
+     * save object state in the two files
+     */
     public void saveState() {
         winCalcThread.interrupt();
         try {
@@ -116,18 +125,37 @@ public class SocialNetwork implements Enrollment {
         }
     }
 
+    /**
+     * @return a string representing the multicast group used for send notification
+     */
     public String getMulticastGroup() {
         return multicastGroup;
     }
+
+    /**
+     * @return multicast port to receive UDP messages
+     */
     public int getMulticastPort() {
         return multicastPort;
     }
 
+    /**
+     * generate a random number
+     * @return a random number
+     */
     public String randomMethod() throws RemoteException {
         float random = (float) Math.random();
         System.out.println("random: " + random);
         return "random" + random;
     }
+
+    /**
+     * register a new Utente to the SocialNetwork
+     * @param username unique name
+     * @param password a string between 3 and 20 char
+     * @param tags list of tags used
+     * @return true if username is not already in use and Utente can be created
+     */
     public boolean register(String username, String password, ArrayList<String> tags) throws RemoteException {
         if(username == null || password == null || tags == null){
             throw new NullPointerException("missing parameters");
@@ -135,11 +163,21 @@ public class SocialNetwork implements Enrollment {
         Utente u = new Utente(username, password, tags);
         return utenti.putIfAbsent(username, u) == null;
     }
+
+    /**
+     * activate callback for a client
+     * @param callback a Stub used to notify client about his followers
+     * @param user String representing a user registered
+     * @param password user's password
+     * @return HTTP code representing the status of the request
+     * @throws NullPointerException if a parameter was null
+     */
     @Override
     public int registerCallback(FollowerCallback callback, String user, String password) throws RemoteException, NullPointerException {
         if(callback == null || user == null || password == null){
             throw new NullPointerException("missing field");
         }
+        System.out.println("registerCallback" + user + " " + password + " " + callback);
         Utente u = utenti.get(user);
         if(u == null){
             return 404;
@@ -155,12 +193,28 @@ public class SocialNetwork implements Enrollment {
                 utente = utenti.get(follower);
                 followersSimple.add(new SimpleUtente(follower, utente.getTags()));
             }
-            callback.setOldFollowers(followersSimple);
+            System.out.println("callback added");
+            try {
+                callback.setOldFollowers(followersSimple);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+                return 500;
+            }
+            System.out.println("callback set");
             return 200;
         } else{
             return 500;
         }
     }
+
+    /**
+     * remove client form callback
+     * @param callback Stub to stop inform
+     * @param user user's name
+     * @param password user's password
+     * @return HTTP code representing the status of the request
+     * @throws NullPointerException if a parameter was null
+     */
     @Override
     public int unregisterCallback(FollowerCallback callback, String user, String password) throws RemoteException, NullPointerException {
         if(callback == null || user == null || password == null){
@@ -180,6 +234,12 @@ public class SocialNetwork implements Enrollment {
         }
     }
 
+    /**
+     * tell if a user has a post in his feed
+     * @param username name of the user
+     * @param id id of the post
+     * @return true if the user has the post in his feed
+     */
     private boolean hasPostInFeed(String username, int id){
         Utente u = utenti.get(username);
         if(u == null){
@@ -198,6 +258,13 @@ public class SocialNetwork implements Enrollment {
         }
         return false;
     }
+
+    /**
+     * check if username and password allow user to login
+     * @param username name of the user
+     * @param password user's password
+     * @return true if user is registered and password is correct
+     */
     public Utente login(String username, String password){
         if(username == null || password == null){
             throw new NullPointerException("missing field");
@@ -209,6 +276,11 @@ public class SocialNetwork implements Enrollment {
         }
         return utenti.get(username);
     }
+
+    /**
+     * @param user the user that want to log out
+     * @return HTTP code representing the status of the request
+     */
     public int logout(Utente user) {
         if (user == null) {
             throw new NullPointerException("missing field");
@@ -220,6 +292,12 @@ public class SocialNetwork implements Enrollment {
         }
     }
 
+    /**
+     * start following username
+     * @param user follower
+     * @param username followed
+     * @return HTTP code representing the status of the request
+     */
     public int follow(Utente user, String username) {
         if (user == null || username == null) {
             return 400;
@@ -234,6 +312,13 @@ public class SocialNetwork implements Enrollment {
             return 500;
         }
     }
+
+    /**
+     * stop following username
+     * @param user follower
+     * @param username followed
+     * @return HTTP code representing the status of the request
+     */
     public int unfollow(Utente user, String username) {
         if (user == null || username == null) {
             return 400;
@@ -245,6 +330,11 @@ public class SocialNetwork implements Enrollment {
         user.unfollow(followed);
         return 200;
     }
+
+    /**
+     * @param user user we are interested in
+     * @return list of SimpleUtente following user
+     */
     public ArrayList<SimpleUtente> getFollowers(Utente user) {
         if (user == null) {
             throw new NullPointerException();
@@ -258,6 +348,10 @@ public class SocialNetwork implements Enrollment {
         }
         return followersSimple;
     }
+    /**
+     * @param user user we are interested in
+     * @return list of SimpleUtente followed by user
+     */
     public ArrayList<SimpleUtente> getFollowing(Utente user) {
         if (user == null) {
             throw new NullPointerException();
@@ -271,6 +365,10 @@ public class SocialNetwork implements Enrollment {
         }
         return followingSimple;
     }
+    /**
+     * @param user making the request
+     * @return list of SimpleUtente having at least a tag in common with user
+     */
     public ArrayList<SimpleUtente> getSuggested(Utente user) {
         if (user == null) {
             throw new NullPointerException();
@@ -285,7 +383,12 @@ public class SocialNetwork implements Enrollment {
         return suggested;
     }
 
-
+    /**
+     * create a new post and add it in the user's blog
+     * @param user creator of the post
+     * @param post the post to create
+     * @return new post's id or -1 on failure
+     */
     public int post(Utente user, SimplePost post) {
         if (user == null || post == null) {
             return -1;
@@ -300,9 +403,22 @@ public class SocialNetwork implements Enrollment {
             return -1;
         }
     }
+
+    /**
+     * @param id a post's id
+     * @return the post with specified id or null if not found
+     */
     public Post getPost(int id) {
         return posts.get(id);
     }
+
+    /**
+     * if user is the creator remove a post from Social network
+     * else remove post from user's blog
+     * @param user user that wants to delete the post
+     * @param id post's id
+     * @return HTTP code representing the status of the request
+     */
     public int deletePost(Utente user, int id) {
         if (user == null) {
             return 401;
@@ -320,6 +436,13 @@ public class SocialNetwork implements Enrollment {
             return 403;
         }
     }
+
+    /**
+     * add a post to user's blog
+     * @param user user that wants to rewin the post
+     * @param id post's id
+     * @return HTTP code representing the status of the request
+     */
     public int rewin(Utente user, int id) {
         if (user == null) {
             return 401;
@@ -338,6 +461,14 @@ public class SocialNetwork implements Enrollment {
             return 403;
         }
     }
+
+    /**
+     * add rating to a post
+     * @param user user who wants to
+     * @param id post to rate
+     * @param rating an int representing the rating
+     * @return HTTP code representing the status of the request
+     */
     public int ratePost(Utente user, int id, int rating) {
         if (user == null) {
             return 401;
@@ -355,6 +486,14 @@ public class SocialNetwork implements Enrollment {
             return 403;
         }
     }
+
+    /**
+     * add a comment to a post
+     * @param user user commenting
+     * @param id post's id
+     * @param comment the comment to leave
+     * @return HTTP code representing the status of the request
+     */
     public int comment(Utente user, int id, String comment) {
         if (user == null || comment == null) {
             return 400;
@@ -378,6 +517,11 @@ public class SocialNetwork implements Enrollment {
         }
     }
 
+    /**
+     * return the blog of user
+     * @param user blog's user
+     * @return a list representing posts on user's blog
+     */
     public ArrayList<PostHead> getPosts(Utente user) {
         if (user == null) {
             throw new NullPointerException();
@@ -394,6 +538,12 @@ public class SocialNetwork implements Enrollment {
         }
         return postHeads;
     }
+
+    /**
+     * show feed of user
+     * @param user the user that want to se the feed
+     * @return a list representing posts in feed
+     */
     public ArrayList<PostHead> showFeed(Utente user) {
         if (user == null) {
             throw new NullPointerException();
@@ -414,12 +564,21 @@ public class SocialNetwork implements Enrollment {
         return postHeads;
     }
 
+    /**
+     * @param user wallet's user
+     * @return a copy of user's wallet
+     */
     public SimpleWallet getWallet(Utente user) {
         if (user == null) {
             throw new NullPointerException();
         }
         return user.getWallet();
     }
+
+    /**
+     * @param user user we are interested in
+     * @return the WNC amount earned by user
+     */
     public float getWincoin(Utente user) {
         if (user == null) {
             throw new NullPointerException();

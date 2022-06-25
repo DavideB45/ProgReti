@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
-        int portTCP = 8080;
+        int portTCP = 3031;
         String host = "192.168.56.1";
         try {
             serverConn = new ServerConnection(InetAddress.getByName(host), portTCP);
@@ -64,7 +64,7 @@ public class MainClient {
                             default:
                                 answer = "operazione non riconosciuta";
                                 break;
-                        };
+                        }
                         break;
                     case "list":
                         switch (splitReq[1]) {
@@ -80,7 +80,7 @@ public class MainClient {
                             default:
                                 answer = "operazione non riconosciuta";
                                 break;
-                        };
+                        }
                         break;
                     case "blog":
                         answer = serverConn.viewBlog();

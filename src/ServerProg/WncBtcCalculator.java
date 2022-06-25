@@ -30,6 +30,10 @@ public class WncBtcCalculator{
         }
     }
 
+    /**
+     * @param wnc amount to change
+     * @return the value of WNC in BTC or -1 if random.org unusable
+     */
     public synchronized float WNCtoBTC(float wnc){
         if(!usable){
             return -1;

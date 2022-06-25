@@ -14,7 +14,10 @@ public class SysInReader implements Runnable {
         this.running = running;
         this.selector = selector;
     }
-
+    /**
+     * wait on stdin until read "exit"
+     * after reading "exit" set running to false and terminate
+     */
     @Override
     public void run() {
         String input;

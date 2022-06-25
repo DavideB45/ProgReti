@@ -24,6 +24,13 @@ public class ConnectedUser {
             RequestBuffer = new ByteBuffer[]{ByteBuffer.allocate(Integer.BYTES), ByteBuffer.allocate(1024)};
     }
 
+    /**
+    * set the answer to send
+    * first line of answer will contain the code
+    * the following one String each
+    * terminated by an empty string
+    * To send answer see sendResponse
+    */
     public void setResponse(int code, String[] values) throws IOException {
         if (ResponseBuffer == null) {
             ResponseBuffer = ByteBuffer.allocate(Integer.BYTES + 1024);
@@ -40,6 +47,11 @@ public class ConnectedUser {
         ResponseBuffer.put("\n\n".getBytes(StandardCharsets.UTF_8));
         ResponseBuffer.flip();
     }
+    /**
+    *  called to send a response (non-blocking)
+    * return true if answer is fully sent
+    * return false otherwise
+    */
     public boolean sendResponse() throws IOException {
         sChannel.write(ResponseBuffer);
         if (ResponseBuffer.hasRemaining()) {
@@ -49,6 +61,12 @@ public class ConnectedUser {
             return true;
         }
     }
+    /**
+    *  called to read a request (non-blocking)
+    * return true if answer is fully read or user closed connection
+    * false otherwise
+    * if completed successfully  getOperation and getArgs will return correct value
+    */
     public boolean readRequest() throws IOException {
         if(sChannel.read(RequestBuffer) == -1){
             operation = -1;
@@ -72,15 +90,28 @@ public class ConnectedUser {
         }
         return false;
     }
+    /**
+     * return the SelectionKey associated to the connection
+     */
     public SelectionKey getKey() {
         return key;
     }
+    /**
+     * return the last operation required by the User
+     * if user closed connection return -1
+     */
     public int getOperation() {
         return operation;
     }
+    /**
+     * return the last args read by readRequest
+     */
     public String[] getArgs() throws IOException {
         return args;
     }
+    /**
+     * close the connection
+     */
     public void disconnect(){
         try {
             sChannel.close();
@@ -90,14 +121,22 @@ public class ConnectedUser {
         }
     }
 
-
+    /**
+     * used to assign to the Object a value representing a registered user
+     */
     public void setIdentity(Utente user){
         this.identity = user;
     }
+    /**
+     * return registered user or null
+     */
     public Utente getIdentity(){
         return this.identity;
     }
-
+    /**
+    * this value is true if user closed connection
+    * before last call to readRequest
+    */
     public boolean isConnected(){
         return operation != -1;
     }

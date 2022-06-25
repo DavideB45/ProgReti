@@ -29,10 +29,11 @@ public class MainServer {
             configFile = new File(args[0]);
         }
         int registryPort = Integer.parseInt(getFromConfig(configFile, "REGISTRY_PORT", "8081"));
-        String registryHost = null;
+        String registryHost;
         try {
             registryHost = getFromConfig(configFile, "REGISTRY_LOCATION", "localhost");
             if(registryHost.equals("localhost")) {
+                // if register is on localhost can be reached by clients
                 registryHost = InetAddress.getLocalHost().getHostAddress();
             }
             System.out.println("Registry host: " + registryHost);
@@ -44,6 +45,7 @@ public class MainServer {
         ThreadPoolExecutor workerPool = new ThreadPoolExecutor(minThreads, maxThreads, 10,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(15));
         try {
+            // create SocialNetwork using settings found in configFile
             sn = snFromFile(configFile);
             serverSocket = ServerSocketChannel.open();
             int port = Integer.parseInt(getFromConfig(configFile, "TCP_SERVER_PORT", "8080"));
@@ -65,6 +67,7 @@ public class MainServer {
         AtomicBoolean running = new AtomicBoolean(true);
         Thread sysInReader = new Thread(new SysInReader(running, selector));
         sysInReader.start();
+        // run until read "exit" on console
         while (running.get()) {
             try {
                 if (selector.select() == 0) {
@@ -75,19 +78,20 @@ public class MainServer {
                 while (iter.hasNext()) {
                     SelectionKey key = iter.next();
                     iter.remove();
-                    if (key.isAcceptable()) {
+                    if (key.isAcceptable()) {// create a connection with a new client
                         clientSocket = serverSocket.accept();
                         clientSocket.configureBlocking(false);
                         SelectionKey newKey = clientSocket.register(selector, SelectionKey.OP_READ);
                         ConnectedUser newUser = new ConnectedUser(clientSocket, newKey);
                         newKey.attach(newUser);
                     } else if(key.isWritable() || key.isReadable()) {
-                        // add thread to handle request
+                        // thread will handle request
                         key.interestOps(0);
                         ClientRequestRunnable task = new ClientRequestRunnable((ConnectedUser) key.attachment(), selector, exchanger, sn, registryHost, registryPort);
                         try{
                             workerPool.execute(task);
                         } catch (RejectedExecutionException e){
+                            // if threadPool is full the main thread will handle the request
                             task.run();
                         }
                     }
@@ -152,6 +156,10 @@ public class MainServer {
         }
     }
 
+    /**
+    * create a SocialNetwork object using the information found in config
+    * if something is missing use default configuration
+    */
     private static SocialNetwork snFromFile(File config) {
         String uPath = "users.json";
         String pPath = "posts.json";
@@ -196,7 +204,10 @@ public class MainServer {
 
         return new SocialNetwork(uPath, pPath, sleepTime, multicastAddress, multicastPort, cPercentage);
     }
-
+    /**
+    * return the value found in config
+    * or return defaultValue
+    */
     private static String getFromConfig(File config, String key, String defaultValue){
         String value = "";
         if (config.canRead()){

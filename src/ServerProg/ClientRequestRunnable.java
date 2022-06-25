@@ -31,6 +31,9 @@ public class ClientRequestRunnable implements Runnable{
     }
 
     @Override
+    /* *
+    * call to handle a connection with a client non-blocking
+    */
     public void run() {
         try {
             if(u.getKey().isReadable()){
@@ -38,13 +41,17 @@ public class ClientRequestRunnable implements Runnable{
                     // request is fully read
                     int opCode = u.getOperation();
                     String[] args = u.getArgs();
+                    // execute the request
                     if(! handleUser(opCode, args)){
-                        u.getKey().cancel();
+                        // if something went wrong
+                        u.disconnect();
                     } else {
+                        // the answer is set correctly
                         u.getKey().interestOps(SelectionKey.OP_WRITE);
                         selector.wakeup();
                     }
                 } else {
+                    // incomplete read
                     u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
                 }
@@ -54,17 +61,24 @@ public class ClientRequestRunnable implements Runnable{
                     u.getKey().interestOps(SelectionKey.OP_READ);
                     selector.wakeup();
                 } else {
+                    // response not fully sent
                     u.getKey().interestOps(SelectionKey.OP_WRITE);
                     selector.wakeup();
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            u.getKey().cancel();
-            // close connection
+            u.disconnect();
         }
     }
 
+
+    /* *
+    * take the requested operation and it's arguments as input
+    * handle the request
+    * return true if no Exception occurred and connection can still be used
+    * false otherwise
+    */
     private boolean handleUser(int operation, String[] args) {
         if (!u.isConnected()){
             return false;
@@ -77,7 +91,7 @@ public class ClientRequestRunnable implements Runnable{
                     // get user info
                     u.setResponse(200, new String[]{hostRMI, String.valueOf(portRMI)});
                     break;
-                case 2:
+                case 2:// login
                     Utente verifiedUser = sn.login(args[0], args[1]);
                     u.setIdentity(verifiedUser);
                     if (verifiedUser == null) {
@@ -86,11 +100,11 @@ public class ClientRequestRunnable implements Runnable{
                         u.setResponse(200, new String[]{sn.getMulticastGroup(), String.valueOf(sn.getMulticastPort())});
                     }
                     break;
-                case 3:
+                case 3:// logout
                     u.setResponse(sn.logout(user), null);
                     u.setIdentity(null);
                     break;
-                case 4:
+                case 4:// list users
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -103,14 +117,14 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 7:
+                case 7:// follow
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
                         u.setResponse(sn.follow(user, args[0]), null);
                     }
                     break;
-                case 6:
+                case 6:// list following
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -123,14 +137,14 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 8:
+                case 8:// unfollow
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
                         u.setResponse(sn.unfollow(user, args[0]), null);
                     }
                     break;
-                case 9:
+                case 9:// view blog
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -143,7 +157,7 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 10:
+                case 10:// create post
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -156,7 +170,7 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 11:
+                case 11:// show feed
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -169,7 +183,7 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 12:
+                case 12:// show post
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -181,35 +195,35 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 13:
+                case 13:// delete post
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
                         u.setResponse(sn.deletePost(user, Integer.parseInt(args[0])), null);
                     }
                     break;
-                case 14:
+                case 14:// rewin post
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
                         u.setResponse(sn.rewin(user, Integer.parseInt(args[0])), null);
                     }
                     break;
-                case 15:
+                case 15:// rate post
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
                         u.setResponse(sn.ratePost(user, Integer.parseInt(args[0]), Integer.parseInt(args[1])), null);
                     }
                     break;
-                case 16:
+                case 16:// add comment
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
                         u.setResponse(sn.comment(user, Integer.parseInt(args[0]), args[1]), null);
                     }
                     break;
-                case 17:
+                case 17:// get wallet
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -221,7 +235,7 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
-                case 18:
+                case 18:// get wallet value in BTC
                     if(user == null){
                         u.setResponse(401, null);
                     } else {
@@ -238,6 +252,7 @@ public class ClientRequestRunnable implements Runnable{
                     }
                     break;
                 default:
+                    // print everything received
                     System.out.println("richiesta strana : " + operation);
                     for (String arg: args) {
                         System.out.println(arg);

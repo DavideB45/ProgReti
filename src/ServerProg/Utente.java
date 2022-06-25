@@ -21,6 +21,11 @@ public class Utente {
     private final Object lockTime = new Object();
     private Wallet wallet = new Wallet();
 
+    /**
+     * @param username 2 < username.length() < 21
+     * @param password 0 < password.length() < 21
+     * @param tags tags representing user's interests
+     */
     public Utente(String username, String password, ArrayList<String> tags){
         if(username == null || password == null || tags == null){
             throw new NullPointerException("campo mancante");
@@ -116,9 +121,19 @@ public class Utente {
         return wallet.copy();
     }
 
+    /**
+     * @param password user's password
+     * @return true if user's password is password passed as argument
+     */
     public boolean checkPassword(String password){
         return this.password.equals(password);
     }
+
+    /**
+     * @param tags a list of interests
+     * @return true if one or more tags are also this user's tags
+     * @throws NullPointerException if tags is null
+     */
     public boolean checkTag(ArrayList<String> tags) throws NullPointerException{
         if(tags == null){
             throw new NullPointerException("tags mancanti");
@@ -131,13 +146,22 @@ public class Utente {
         return false;
     }
 
-    //functions useful to handle wallet
+    /**
+     * add a record to user's wallet
+     * @param wincoin amount of WNC earned
+     * @param postId post that generated the revenue
+     * @param timestamp time when WNC were earned
+     */
     public void addRecord(float wincoin, int postId, long timestamp){
         wallet.addRecord(wincoin, postId, timestamp);
     }
 
 
-    // return a copy of all followers
+    /**
+     * add a Stub to notify for follower's info
+     * @param callback the Stub to call
+     * @return true if Stub was added
+     */
     public synchronized boolean addCallback(FollowerCallback callback){
         if (callback == null){
             return false;
@@ -147,12 +171,25 @@ public class Utente {
         }
         return followersCallbacks.add(callback);
     }
+
+    /**
+     * remove a Stub from callback's list
+     * @param callback the Stub to remove
+     * @return true if Stub was removed
+     */
     public synchronized boolean removeCallback(FollowerCallback callback){
         if (callback == null){
             return false;
         }
         return followersCallbacks.remove(callback);
     }
+
+    /**
+     * make a callback to every Stub registered
+     * @param name the person following/unfollowing
+     * @param tags person's tags
+     * @param followState true if following, false if unfollowing
+     */
     public synchronized void notifyAll(String name,ArrayList<String> tags,boolean followState){
         ArrayList<FollowerCallback> disconnected = new ArrayList<>();
         for(FollowerCallback callback : followersCallbacks){
@@ -168,6 +205,12 @@ public class Utente {
         }
         followersCallbacks.removeAll(disconnected);
     }
+
+    /**
+     * add follower to this
+     * @param username follower
+     * @return true if username wasn't this and is now following
+     */
     public boolean addFollower(Utente username){
         if(username == null){
             throw new NullPointerException("username mancante");
@@ -180,6 +223,12 @@ public class Utente {
         }
         return true;
     }
+
+    /**
+     * remove username from follower list
+     * @param username user unfollowing
+     * @throws NullPointerException if username is null
+     */
     public void removeFollower(Utente username) throws NullPointerException{
         if(username == null){
             throw new NullPointerException("username mancante");
@@ -188,6 +237,10 @@ public class Utente {
             notifyAll(username.getUsername(), username.getTags(), false);
         }
     }
+
+    /**
+     * @return tru if username is in following list
+     */
     public boolean isFollowing(String username){
         if(username == null){
             throw new NullPointerException("username mancante");
@@ -195,7 +248,11 @@ public class Utente {
         return following.contains(username);
     }
 
-    // this starts to follow utente
+    /**
+     * this starts to follow utente
+     * @param utente user to follow
+     * @return true if added following
+     */
     public boolean follow(Utente utente){
         synchronized (following) {
             if (utente == null) {
@@ -209,7 +266,11 @@ public class Utente {
             return true;
         }
     }
-    // this stops to follow utente
+
+    /**
+     * this stops to follow utente
+     * @param utente user to stop following
+     */
     public void unfollow(Utente utente){
         synchronized (following) {
             if (utente == null) {
@@ -223,23 +284,45 @@ public class Utente {
         }
     }
 
-    // add a post to the user's posts
+    /**
+     * add a post to the user's blog
+     * @param post post's id to add
+     */
     public void addPost(int post){
         posts.add(post);
     }
-    // tell if the user has a post with the given id
+
+    /**
+     * @param post post's id
+     * @return true if the user has a post with the given id in blog
+     */
     public boolean hasPost(int post){
         return posts.contains(post);
     }
-    // add post if it is not already in the user's posts
+
+    /**
+     * add post if it is not already in the user's posts
+     * @param post the id to add
+     * @return true if post was added
+     */
     public boolean addPostIfAbsent(int post){
         return posts.addIfAbsent(post);
     }
-    // remove a post from the user's posts
+
+    /**
+     * remove a post from the user's posts
+     * @param post id to remove
+     * @return true if post was removed
+     */
     public boolean removePost(int post){
         return posts.removeElement(post);
     }
-    // return the last time the user watched the feed and eventually update it
+
+    /**
+     * may update the last time user watched the feed the value is updated if
+     * last request was made MINUTES_TO_UPDATE_FEED before System.currentTimeMillis()
+     * @return the last time the user watched the feed
+     */
     public long getLastFeedWatch(){
         synchronized (lockTime) {
             long last = lastFeedWatch;

@@ -164,6 +164,10 @@ public class Post {
         this.comments.addAll(comments);
     }
 
+    /**
+    * return a simplified version of the post
+    * containing only id creator and title
+    */
     @JsonIgnore
     public PostHead getHead(){
         readLock.lock();
@@ -173,17 +177,27 @@ public class Post {
             readLock.unlock();
         }
     }
+    /**
+    * return true if the Post has been posted after date,
+    * or it has been rewinded after date
+    * return false otherwise
+    */
     public boolean postedAfter(long date){
         return this.date.get() > date;
     }
+    /**
+     * set the date of the post to System.currentTimeMillis()
+     */
     public void refreshDate(){
         this.date.set(System.currentTimeMillis());
     }
 
-    /*method to calculate the wincoin earned during the iteration
-    returns the list of user that interacted with the post
-    to obtain the value of earned wincoin see getLastWincoin()
-    not safe to call the method by 2 or more threads*/
+    /**
+     * method to calculate the wincoin earned during the iteration.
+     * returns the list of user that interacted with the post
+     * to obtain the value of earned wincoin see getLastWincoin()
+     * not safe to call the method by 2 or more threads
+     */
     public HashSet<String> calculateWincoin() {
         /*function use the read lock because the only variables it modifies
         only by this method*/
@@ -224,7 +238,13 @@ public class Post {
     public float getLastWincoin(){
         return lastWincoin;
     }
-
+    /**
+    * add the rating of the username
+    * method can be called once for every user
+    * if vote < 0 rating is negative
+    * positive if >= 0
+    * return false if post already been rated by username
+    */
     public boolean vote(String username, int vote){
         writeLock.lock();
         try {
@@ -248,7 +268,9 @@ public class Post {
             writeLock.unlock();
         }
     }
-
+    /**
+     * add comment to the post
+     */
     public void addComment(Comment comment){
         writeLock.lock();
         try{
@@ -261,6 +283,9 @@ public class Post {
             writeLock.unlock();
         }
     }
+    /**
+     * return the comment in position i
+     */
     @JsonIgnore
     public Comment getComment(int i) {
         readLock.lock();
@@ -274,6 +299,9 @@ public class Post {
             readLock.unlock();
         }
     }
+    /**
+     * return the number of comments to the post
+     */
     @JsonIgnore
     public int getCommentCount() {
         readLock.lock();

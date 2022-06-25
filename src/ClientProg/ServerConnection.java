@@ -50,6 +50,11 @@ public class ServerConnection {
             callback = (FollowerCallback) UnicastRemoteObject.exportObject(followers, 0);
         }
     }
+
+    /**
+     * try to reconnect to the server
+     * @return true if connection reestablished
+     */
     public boolean reconnect(){
         try {
             if(oStr != null && iStr != null) {
@@ -68,6 +73,14 @@ public class ServerConnection {
         }
     }
 
+
+    /**
+     * register a new user to the social network
+     * @param name the username
+     * @param password a password
+     * @param tags things user likes
+     * @return a String explaining the status of the request
+     */
     public String register(String name, String password, ArrayList<String> tags){
         if(logged){
             return "Already logged in";
@@ -85,6 +98,11 @@ public class ServerConnection {
             return "Riempire tutti i campi: nome password tags";
         }
     }
+
+    /**
+     * send a request to register for RMI callback
+     * @return a String explaining the status of the request
+     */
     public String registerForFollower(){
         if(!logged){
             return "Not logged in";
@@ -96,6 +114,11 @@ public class ServerConnection {
             return "notifiche non attive";
         }
     }
+
+    /**
+     * send a request to unregister for RMI callback
+     * @return a String explaining the status of the request
+     */
     public String unregisterForFollower(){
         if(!logged){
             return "Not logged in";
@@ -109,6 +132,13 @@ public class ServerConnection {
         }
     }
 
+    /**
+     * tru to login using username and password
+     * @param username the username
+     * @param password the password
+     * @return a String explaining the status of the request
+     * @throws IOException if a problem with connection occurs
+     */
     public String login(String username, String password) throws IOException {
         if(logged){
             return "Already logged in";
@@ -136,6 +166,12 @@ public class ServerConnection {
             return status + ": wrong password or user not registered";
         }
     }
+
+    /**
+     * logout from the server
+     * @return a String explaining the status of the request
+     * @throws IOException if a problem with connection occurs
+     */
     public String logout() throws IOException {
         if(!logged){
             return "Not logged in";
@@ -158,6 +194,12 @@ public class ServerConnection {
         }
     }
 
+    /**
+     * start to follow user
+     * @param username the user to follow
+     * @return a String explaining the status of the request
+     * @throws IOException if a problem with connection occurs
+     */
     public String follow(String username) throws IOException {
         if(!logged){
             return "Not logged in";
@@ -172,6 +214,13 @@ public class ServerConnection {
             return status + ": unable to follow";
         }
     }
+
+    /**
+     * stop following user
+     * @param username the user to unfollow
+     * @return a String explaining the status of the request
+     * @throws IOException if a problem with connection occurs
+     */
     public String unfollow(String username) throws IOException {
         if(!logged){
             return "Not logged in";
@@ -186,7 +235,11 @@ public class ServerConnection {
             return status + ": unable to unfollow";
         }
     }
-    public String listFollowers() throws IOException {
+
+    /**
+     * @return a String showing followers
+     */
+    public String listFollowers() {
         if (!logged) {
             return "Not logged in";
         }
@@ -201,6 +254,10 @@ public class ServerConnection {
         }
         return sb.toString();
     }
+
+    /**
+     * @return a string showing following or an error
+     */
     public String listFollowing() throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -225,6 +282,10 @@ public class ServerConnection {
         }
 
     }
+
+    /**
+     * @return a String showing users with at least a tag in common oe an error
+     */
     public String listUsers() throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -249,6 +310,12 @@ public class ServerConnection {
         }
     }
 
+    /**
+     * create a post
+     * @param title the title of the post
+     * @param text the content of the post
+     * @return the id of the new post or an error
+     */
     public String post(String title, String text) throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -267,6 +334,11 @@ public class ServerConnection {
             return status + ": unable to post";
         }
     }
+
+    /**
+     * @param postId the post to show
+     * @return a string representing the post or an error
+     */
     public String showPost(String postId) throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -284,6 +356,13 @@ public class ServerConnection {
             return status + ": unable to show post";
         }
     }
+
+    /**
+     * remove post from user's blog
+     * and if connected user is the creator remove it from the social network
+     * @param postId the post to delete
+     * @return a String explaining the result
+     */
     public String deletePost(String postId) throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -302,6 +381,12 @@ public class ServerConnection {
             return "post not found";
         return status + ": unable to delete post";
     }
+
+    /**
+     * add a post to user's blog if not already in his blog
+     * @param postId the post to rewin
+     * @return a String explaining the status
+     */
     public String rewin(String postId) throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -318,6 +403,13 @@ public class ServerConnection {
             return "post not found";
         return status + ": unable to rewin post";
     }
+
+    /**
+     * rate a post
+     * @param postId post to rate
+     * @param rating number representing vote
+     * @return String explaining the status
+     */
     public String rate(String postId, String rating) throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -336,6 +428,13 @@ public class ServerConnection {
             return "already rated";
         return status + ": unable to rate post";
     }
+
+    /**
+     * add comment to a post
+     * @param postId post to comment
+     * @param comment comment to leave
+     * @return String explaining the result
+     */
     public String comment(String postId, String comment) throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -357,6 +456,9 @@ public class ServerConnection {
         return status + ": unable to comment post";
     }
 
+    /**
+     * @return a string representing posts in user's blog or an error
+     */
     public String viewBlog() throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -379,6 +481,10 @@ public class ServerConnection {
             return status + ": unable to view blog";
         }
     }
+
+    /**
+     * @return a string representing posts in user's feed
+     */
     public String showFeed() throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -401,6 +507,9 @@ public class ServerConnection {
         }
     }
 
+    /**
+     * @return a string representing user's revenue or an error
+     */
     public String wallet() throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -418,6 +527,10 @@ public class ServerConnection {
             return status + ": unable to show wallet";
         }
     }
+
+    /**
+     * @return the value of wallet in BTC or an error
+     */
     public String getWalletInBitcoin() throws IOException {
         if (!logged) {
             return "Not logged in";
@@ -437,6 +550,11 @@ public class ServerConnection {
         }
     }
 
+    /**
+     * send a request to the server
+     * @param words array of parameters (starting with operation number)
+     * @throws IOException if unable to send request
+     */
     private void writeRequest(String[] words) throws IOException {
         byte[] message = String.join("\n", words).getBytes(StandardCharsets.UTF_8);
         int mLen = message.length;

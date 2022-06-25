@@ -1,9 +1,7 @@
 package ClientProg;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.*;
-import java.util.Enumeration;
 
 public class NotificationReceiver implements Runnable{
     MulticastSocket socket;
@@ -11,11 +9,15 @@ public class NotificationReceiver implements Runnable{
 
     public NotificationReceiver(InetAddress multicastAddress, int multicastPort) throws IOException {
         socket = new MulticastSocket(multicastPort);
-        NetworkInterface networkInterface = NetworkInterface.getByName("en0");
-        socket.joinGroup(new InetSocketAddress(multicastAddress, multicastPort), networkInterface);
-        //socket.joinGroup(multicastAddress);
+        //NetworkInterface networkInterface = NetworkInterface.getByName("en0");
+        //socket.joinGroup(new InetSocketAddress(multicastAddress, multicastPort), networkInterface);
+        socket.joinGroup(multicastAddress);
     }
 
+    /**
+     * wait on multicast socket
+     * print received data
+     */
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
