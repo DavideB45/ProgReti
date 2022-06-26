@@ -1,11 +1,9 @@
 package ClientProg;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.rmi.NotBoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 
 public class MainTest {
@@ -21,7 +19,7 @@ public class MainTest {
             System.out.println("------------------------------------------------------------");
         }
         try {
-            serverConn = new ServerConnection(InetAddress.getLocalHost(), 3031);
+            serverConn = new ServerConnection("files/configClient.txt");
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (NotBoundException e) {

@@ -23,6 +23,7 @@ public class ServerConnection {
     private String password = null;
     private boolean logged = false;
     private final FollowerList followers = new FollowerList();
+    boolean localFollowers;
 
     Thread multicastThread = null;
 
@@ -31,14 +32,18 @@ public class ServerConnection {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public ServerConnection(InetAddress host, int portTCP) throws IOException, NotBoundException {
-        this.host = host;
-        this.port = portTCP;
+    public ServerConnection(String configFile) throws IOException, NotBoundException {
+        File file = new File(configFile);
+        this.host = InetAddress.getByName(getFromConfig(file, "SERVER_IP", "localhost"));
+        this.port = Integer.decode(getFromConfig(file, "SERVER_PORT", "8080"));
         connectionSocket = new Socket(host, port);
         oStr = connectionSocket.getOutputStream();
         iStr = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
         System.out.println("Connected to " + host.getHostName() + port );
-
+        this.localFollowers = Boolean.parseBoolean(getFromConfig(file, "FOLLOWER_LOCAL", "false"));
+        if(!localFollowers){
+            return;
+        }
         writeRequest(new String[]{"00", "\n"});
         iStr.readLine();
         String hostname = iStr.readLine();
@@ -107,6 +112,9 @@ public class ServerConnection {
         if(!logged){
             return "Not logged in";
         }
+        if(!localFollowers){
+            return "follower locali dsattivati";
+        }
         try {
             stubSN.registerCallback(callback, username, password);
             return "notifiche attive";
@@ -122,6 +130,9 @@ public class ServerConnection {
     public String unregisterForFollower(){
         if(!logged){
             return "Not logged in";
+        }
+        if(!localFollowers){
+            return "follower locali dsattivati";
         }
         try {
             stubSN.unregisterCallback(callback, username, password);
@@ -237,22 +248,44 @@ public class ServerConnection {
     }
 
     /**
-     * @return a String showing followers
+     * @return a String showing followers or an error
+     * @throws IOException if a problem with connection occurs
      */
-    public String listFollowers() {
+    public String listFollowers() throws IOException {
         if (!logged) {
             return "Not logged in";
         }
-        ArrayList<SimpleUtente> copy =  followers.getFollowersCopy();
-        StringBuilder sb = new StringBuilder();
-        for(SimpleUtente u : copy){
-            sb.append(u.getUsername() + "\t");
-            for (String tag : u.getTags()) {
-                sb.append(tag + " ");
+        if(localFollowers) {
+            ArrayList<SimpleUtente> copy = followers.getFollowersCopy();
+            StringBuilder sb = new StringBuilder();
+            for (SimpleUtente u : copy) {
+                sb.append(u.getUsername()).append("\t");
+                for (String tag : u.getTags()) {
+                    sb.append(tag).append(" ");
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
+            return sb.toString();
+        } else {
+            writeRequest(new String[]{"05", "\n"});
+            String status = iStr.readLine();
+            if (Integer.decode(status) == 200) {
+                ArrayList<SimpleUtente> followers = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
+                StringBuilder sb = new StringBuilder();
+                for (SimpleUtente u : followers) {
+                    sb.append(u.getUsername()).append("\t");
+                    for (String tag : u.getTags()) {
+                        sb.append(tag).append(" ");
+                    }
+                    sb.append("\n");
+                }
+                iStr.readLine();
+                return sb.toString();
+            } else {
+                iStr.readLine();
+                return status + ": unable to list followers";
+            }
         }
-        return sb.toString();
     }
 
     /**
@@ -565,5 +598,34 @@ public class ServerConnection {
         }
         oStr.write(length);
         oStr.write(message);
+    }
+
+    /**
+     * read a value from a configuration file
+     * @param config file to read from
+     * @param key name of the value
+     * @param defaultValue value used if a problem occurs
+     * @return the value of key
+     */
+    private String getFromConfig(File config, String key, String defaultValue){
+        String value = "";
+        if (config.canRead()){
+            try (BufferedReader br = new BufferedReader(new FileReader(config))){
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.replaceAll(" ","").split("=");
+                    if (parts[0].equals(key)) {
+                        value = parts[1];
+                        break;
+                    }
+                }
+            } catch (IOException ignored){}
+        }
+        if (value.isEmpty()) {
+            System.out.println(key + " " + defaultValue);
+            return defaultValue;
+        }
+        System.out.println(key + " " + value);
+        return value;
     }
 }

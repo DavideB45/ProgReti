@@ -1,7 +1,6 @@
 package ClientProg;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.rmi.NotBoundException;
 import java.util.ArrayList;
@@ -9,13 +8,14 @@ import java.util.ArrayList;
 public class MainClient {
     public static void main(String[] args){
         ServerConnection serverConn;
-        int portTCP = 3031;
-        String host = "192.168.56.1";
         try {
-            serverConn = new ServerConnection(InetAddress.getByName(host), portTCP);
+            if(args.length < 1){
+                System.out.println("missing config file");
+                return;
+            }
+            serverConn = new ServerConnection(args[0]);
         } catch (IOException | NotBoundException e) {
             System.out.println("Impossibile connettersi al server");
-            System.out.println("porta :" + portTCP);
             return;
         }
 

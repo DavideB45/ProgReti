@@ -117,6 +117,19 @@ public class ClientRequestRunnable implements Runnable{
                         }
                     }
                     break;
+                case 5:// list followers
+                    if(user == null){
+                        u.setResponse(401, null);
+                    } else {
+                        ArrayList<SimpleUtente> list = sn.getFollowers(user);
+                        if(list == null){
+                            u.setResponse(404, null);
+                        } else {
+                            String jsonList = mapper.writeValueAsString(list);
+                            u.setResponse(200, new String[]{jsonList});
+                        }
+                    }
+                    break;
                 case 7:// follow
                     if(user == null){
                         u.setResponse(401, null);

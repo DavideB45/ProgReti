@@ -229,8 +229,10 @@ public class MainServer {
             System.out.println("Using default config");
         }
         if (value.isEmpty()) {
+            System.out.println(key + " " + defaultValue);
             return defaultValue;
         }
+        System.out.println(key + " " + value);
         return value;
     }
 }
