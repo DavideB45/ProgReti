@@ -44,25 +44,49 @@ public class SimplePost {
 
     @Override
     public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(username).append(" on ").append(new Date(date)).append("\n");
+        if(!content.contains("\n")) {
+            for (int i = 0; i < (content.length() - title.length()) / 2; i++) {
+                sb.append(" ");
+            }
+        } else {
+            for (int i = 0; i < (content.indexOf("\n") - title.length()) / 2; i++) {
+                sb.append(" ");
+            }
+        }
+        sb.append(title).append("\n");
+        sb.append(content).append("\n");
+        if(!content.contains("\n")) {
+            for (int i = 0; i < (content.length() - 9) / 2; i++) {
+                sb.append(" ");
+            }
+        } else {
+            for (int i = 0; i < (content.indexOf("\n") - 9) / 2; i++) {
+                sb.append(" ");
+            }
+        }
+        sb.append("↑ ").append(likes).append(" | ↓ ").append(dislikes).append("\n");
+        if(!content.contains("\n")) {
+            for (int i = 0; i < (content.length() - 8) / 2; i++) {
+                sb.append(" ");
+            }
+        } else {
+            for (int i = 0; i < (content.indexOf("\n") - 8) / 2; i++) {
+                sb.append(" ");
+            }
+        }
         if (comments != null) {
             String commentsString = "";
             for (Comment comment : comments) {
                 commentsString += comment.getUsername()+ ": "+ comment.getText() + "\n";
             }
-            return "post by: " + username +
-                    "\n" + title +
-                    "\n" + content +
-                    "\n" + new Date(date) +
-                    "\n↑" + likes + " ↓" + dislikes +
-                    "\ncomments\n" + commentsString;
+            sb.append("Comments \n").append(commentsString);
         } else {
-            return "post by: " + username +
-                    "\n" + title +
-                    "\n" + content +
-                    "\n" + new Date(date) +
-                    "\n↑" + likes + " ↓" + dislikes +
-                    "\nno comments\n";
+            sb.append("No comments");
         }
+        return sb.toString();
     }
 
     public String getUsername() {

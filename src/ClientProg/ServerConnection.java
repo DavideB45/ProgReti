@@ -268,30 +268,16 @@ public class ServerConnection {
         }
         if(localFollowers) {
             ArrayList<SimpleUtente> copy = followers.getFollowersCopy();
-            StringBuilder sb = new StringBuilder();
-            for (SimpleUtente u : copy) {
-                sb.append(u.getUsername()).append("\t");
-                for (String tag : u.getTags()) {
-                    sb.append(tag).append(" ");
-                }
-                sb.append("\n");
-            }
-            return sb.toString();
+            return "FOLLOWERS      || TAGS\n" +
+                    prettifySimpleUser(copy);
         } else {
             writeRequest(new String[]{"05", "\n"});
             String status = iStr.readLine();
             if (Integer.decode(status) == 200) {
-                ArrayList<SimpleUtente> followers = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
-                StringBuilder sb = new StringBuilder();
-                for (SimpleUtente u : followers) {
-                    sb.append(u.getUsername()).append("\t");
-                    for (String tag : u.getTags()) {
-                        sb.append(tag).append(" ");
-                    }
-                    sb.append("\n");
-                }
+                ArrayList<SimpleUtente> copy = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
                 iStr.readLine();
-                return sb.toString();
+                return "FOLLOWERS      || TAGS\n" +
+                        prettifySimpleUser(copy);
             } else {
                 iStr.readLine();
                 return status + ": unable to list followers";
@@ -310,16 +296,9 @@ public class ServerConnection {
         String status = iStr.readLine();
         if (Integer.decode(status) == 200) {
             ArrayList<SimpleUtente> following = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
-            StringBuilder sb = new StringBuilder();
-            for (SimpleUtente u : following) {
-                sb.append(u.getUsername() + "\t");
-                for (String tag : u.getTags()) {
-                    sb.append(tag + " ");
-                }
-                sb.append("\n");
-            }
             iStr.readLine();
-            return sb.toString();
+            return "FOLLOWING      || TAGS\n" +
+                    prettifySimpleUser(following);
         } else {
             iStr.readLine();
             return status + ": unable to list following";
@@ -338,16 +317,9 @@ public class ServerConnection {
         String status = iStr.readLine();
         if (Integer.decode(status) == 200) {
             ArrayList<SimpleUtente> users = mapper.readValue(iStr.readLine(), new TypeReference<ArrayList<SimpleUtente>>() {});
-            StringBuilder sb = new StringBuilder();
-            for (SimpleUtente u : users) {
-                sb.append(u.getUsername() + "\t");
-                for (String tag : u.getTags()) {
-                    sb.append(tag + " ");
-                }
-                sb.append("\n");
-            }
             iStr.readLine();
-            return sb.toString();
+            return "USERS          || TAGS\n" +
+                    prettifySimpleUser(users);
         } else {
             iStr.readLine();
             return status + ": unable to list users";
@@ -517,8 +489,10 @@ public class ServerConnection {
             StringBuilder sb = new StringBuilder();
             for (int i = heads.size() - 1; i >= 0; i--) {
                 PostHead head = heads.get(i);
-                sb.append(head.getId() + " " + head.getUsername() + "\n" + head.getTitle() + "\n");
+                sb.append("------------------------------\n");
+                sb.append(prettifyPost(head));
             }
+            sb.append("------------------------------\n");
             return sb.toString();
         } else {
             iStr.readLine();
@@ -542,8 +516,10 @@ public class ServerConnection {
             ArrayList<PostHead> feed = mapper.readValue(jsonPosts, new TypeReference<ArrayList<PostHead>>() {});
             StringBuilder sb = new StringBuilder();
             for (PostHead post : feed) {
-                sb.append(post.getId() + " " + post.getUsername() + "\n" + post.getTitle() + "\n");
+                sb.append("------------------------------\n");
+                sb.append(prettifyPost(post));
             }
+            sb.append("------------------------------\n");
             return sb.toString();
         } else {
             iStr.readLine();
@@ -638,5 +614,56 @@ public class ServerConnection {
         }
         System.out.println(key + " " + value);
         return value;
+    }
+
+    /**
+     * @param users a list of users
+     * @return a string representing the users
+     */
+    private String prettifySimpleUser(ArrayList<SimpleUtente> users){
+        if(users.isEmpty())
+            return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
+        for (SimpleUtente u : users) {
+            sb.append(u.getUsername());
+            for(int i = 0; i < 15 - u.getUsername().length(); i++){
+                sb.append(" ");
+            }
+            sb.append("|| ");
+            for (String tag : u.getTags()) {
+                sb.append(tag);
+                for(int i = 0; i < 13 - tag.length(); i++){
+                    sb.append(" ");
+                }
+            }
+            for (int i = 0; i < 5*13 - u.getTags().size() * 13; i++) {
+                sb.append(" ");
+            }
+            sb.append("||\n");
+        }
+        sb.append("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
+        return sb.toString();
+    }
+
+    /**
+    * @param p a post
+    * @return a string representing the posts
+    */
+    private String prettifyPost(PostHead p){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 13 - p.getUsername().length()/2; i++) {
+            sb.append(" ");
+        }
+        sb.append(p.getId());
+        sb.append("\t");
+        sb.append(p.getUsername());
+        sb.append("\n");
+        for (int i = 0; i < 15 - p.getTitle().length()/2; i++) {
+            sb.append(" ");
+        }
+        sb.append(p.getTitle());
+        sb.append("\n");
+        return sb.toString();
     }
 }
