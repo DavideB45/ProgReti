@@ -41,9 +41,6 @@ public class ServerConnection {
         iStr = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
         System.out.println("Connected to " + host.getHostName() + port );
         this.localFollowers = Boolean.parseBoolean(getFromConfig(file, "FOLLOWER_LOCAL", "false"));
-        if(!localFollowers){
-            return;
-        }
         writeRequest(new String[]{"00", "\n"});
         iStr.readLine();
         String hostname = iStr.readLine();
@@ -52,7 +49,6 @@ public class ServerConnection {
         if(rmiPort != -1) {
             Registry registry = LocateRegistry.getRegistry(hostname, rmiPort);
             stubSN = (ServerProg.Enrollment) registry.lookup("WINSOME");
-            callback = (FollowerCallback) UnicastRemoteObject.exportObject(followers, 0);
         }
     }
 
@@ -76,6 +72,19 @@ public class ServerConnection {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * clore the connection with the server
+     */
+    public void closeConnection() throws IOException {
+        try {
+            logout();
+        } catch (IOException ignore) {
+        }
+        oStr.close();
+        iStr.close();
+        connectionSocket.close();
     }
 
 
@@ -116,6 +125,7 @@ public class ServerConnection {
             return "follower locali dsattivati";
         }
         try {
+            callback = (FollowerCallback) UnicastRemoteObject.exportObject(followers, 0);
             stubSN.registerCallback(callback, username, password);
             return "notifiche attive";
         } catch (RemoteException e) {
@@ -196,7 +206,8 @@ public class ServerConnection {
             this.logged = false;
             this.username = null;
             this.password = null;
-            multicastThread.interrupt();
+            if(multicastThread != null)
+                multicastThread.interrupt();
             return "log out completed | " + statusRegister;
         } else if(code == 401){
             return "unrecognised user";

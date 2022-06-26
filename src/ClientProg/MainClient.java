@@ -22,11 +22,22 @@ public class MainClient {
         String request;
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         String answer;
+        HelpCommand help = new HelpCommand();
         while (true) {
             try {
                 request = stdIn.readLine();
                 String[] splitReq = request.split(" ");
                 switch (splitReq[0]) {
+                    case "help":
+                        StringBuilder command = new StringBuilder();
+                        for (int i = 1; i < splitReq.length; i++) {
+                            if(i != splitReq.length - 1)
+                                command.append(splitReq[i] + " ");
+                            else
+                                command.append(splitReq[i]);
+                        }
+                        answer = help.getHelp(command.toString());
+                        break;
                     case "register":
                         ArrayList<String> tags = new ArrayList<>();
                         for (int i = 0; i < splitReq.length - 3 && i < 5; i++) {
@@ -115,7 +126,8 @@ public class MainClient {
                         }
                         break;
                     case "exit":
-                        // TODO: implementare chiusura pulita per ServerConnection
+                        serverConn.closeConnection();
+                        stdIn.close();
                         return;
                     default:
                         answer = "operazione non riconosciuta";

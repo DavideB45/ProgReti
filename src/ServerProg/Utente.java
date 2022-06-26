@@ -6,7 +6,10 @@ import ClientProg.SimpleWallet;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.rmi.RemoteException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Utente {
     private static final int MINUTES_TO_UPDATE_FEED = 60;
@@ -38,7 +41,12 @@ public class Utente {
         }
         lastFeedWatch = System.currentTimeMillis() - MINUTES_TO_UPDATE_FEED * 30 * 1000;
         this.username = username;
-        this.password = password;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            this.password = Arrays.toString(md.digest(password.getBytes()));
+        } catch (NoSuchAlgorithmException e) {
+            this.password = password;
+        }
         this.tags = new ArrayList<>();
         for (String tag : tags) {
             if(tag.length() < 20){
@@ -126,7 +134,12 @@ public class Utente {
      * @return true if user's password is password passed as argument
      */
     public boolean checkPassword(String password){
-        return this.password.equals(password);
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            return Arrays.toString(md.digest(password.getBytes())).equals(this.password);
+        } catch (NoSuchAlgorithmException e) {
+            return password.equals(this.password);
+        }
     }
 
     /**
