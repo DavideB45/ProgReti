@@ -495,7 +495,7 @@ public class SocialNetwork implements Enrollment {
      * @return HTTP code representing the status of the request
      */
     public int comment(Utente user, int id, String comment) {
-        if (user == null || comment == null) {
+        if (user == null || comment == null || comment.isEmpty()) {
             return 400;
         }
         Post p = posts.get(id);

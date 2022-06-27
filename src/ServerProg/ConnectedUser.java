@@ -33,9 +33,21 @@ public class ConnectedUser {
     */
     public void setResponse(int code, String[] values) throws IOException {
         if (ResponseBuffer == null) {
-            ResponseBuffer = ByteBuffer.allocate(Integer.BYTES + 1024);
+            ResponseBuffer = ByteBuffer.allocate(Integer.BYTES + 2048);
         } else {
             ResponseBuffer.clear();
+        }
+        int bytes = 10;
+        if (values != null){
+            for (String value : values) {
+                bytes += value.length() + 2;
+            }
+            if (bytes > ResponseBuffer.capacity() && bytes < 10000) {
+                ResponseBuffer = ByteBuffer.allocate(bytes);
+            } else if (bytes > 10000) {
+                code = 507;
+                values = null;
+            }
         }
         ResponseBuffer.put(Integer.toString(code).getBytes(StandardCharsets.UTF_8));
         if (values != null){

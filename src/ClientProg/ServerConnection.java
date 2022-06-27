@@ -374,6 +374,27 @@ public class ServerConnection {
     }
 
     /**
+     * @param postId the post to get
+     * @return the post or null
+     * @throws IOException if a problem with connection occurs
+     */
+    public SimplePost showPostObj(String postId) throws IOException {
+        if (!logged) {
+            return null;
+        }
+        writeRequest(new String[]{"12", postId, "\n"});
+        String status = iStr.readLine();
+        int code = Integer.decode(status);
+        if (code == 200) {
+            String jsonPost = iStr.readLine();
+            iStr.readLine();
+            return mapper.readValue(jsonPost, SimplePost.class);
+        } else {
+            iStr.readLine();
+            return null;
+        }
+    }
+    /**
      * remove post from user's blog
      * and if connected user is the creator remove it from the social network
      * @param postId the post to delete
@@ -455,6 +476,8 @@ public class ServerConnection {
         if (!logged) {
             return "Not logged in";
         }
+        if(comment == null || comment.equals(""))
+            return "comment cannot be empty";
         writeRequest(new String[]{"16", postId, comment, "\n"});
         String status = iStr.readLine();
         iStr.readLine();
