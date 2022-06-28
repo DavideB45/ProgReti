@@ -183,7 +183,8 @@ public class Post {
     * return false otherwise
     */
     public boolean postedAfter(long date){
-        return this.date.get() > date;
+        return true;
+        //return this.date.get() > date;
     }
     /**
      * set the date of the post to System.currentTimeMillis()

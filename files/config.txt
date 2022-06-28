@@ -21,6 +21,6 @@ MIN_WORKER_THREADS = 1
 MAX_WORKER_THREADS = 10
 
 #tempo calcolo ricompense in minuti
-TIME_TO_CALCULATE_REWARDS = 1
+TIME_TO_CALCULATE_REWARDS = 5
 #percentuale ricompensa creatore (tra 0.5 e 1)
 CREATOR_REWARD_PERCENTAGE = 0.75

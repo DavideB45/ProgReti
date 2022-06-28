@@ -416,7 +416,7 @@ public class ServerConnection {
             return "unrecognised user";
         if (code == 404)
             return "post not found";
-        return status + ": unable to delete post";
+        return status + ": unable to delete";
     }
 
     /**
@@ -523,6 +523,25 @@ public class ServerConnection {
         }
     }
 
+    /**
+     * @return list of user's posts or null
+     */
+    public ArrayList<PostHead> viewBlogObj() throws IOException {
+        if (!logged) {
+            return null;
+        }
+        writeRequest(new String[]{"09", "\n"});
+        String status = iStr.readLine();
+        int code = Integer.decode(status);
+        if (code == 200) {
+            String jsonHeads = iStr.readLine();
+            iStr.readLine();
+            return mapper.readValue(jsonHeads, new TypeReference<ArrayList<PostHead>>() {});
+        } else {
+            iStr.readLine();
+            return null;
+        }
+    }
     /**
      * @return a string representing posts in user's feed
      */
